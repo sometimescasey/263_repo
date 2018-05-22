@@ -1,0 +1,96 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{lstlinebgrd}
+
+\lstset{basicstyle=\ttfamily,
+escapechar=|,
+mathescape=true}
+
+\title{CSC263 Assignment 1}
+\author{Juanxi Li}
+\date{May 19, 2018}
+
+\begin{document}
+
+\maketitle
+
+\section*{Sources Consulted}
+
+\begin{itemize}
+    \item Lecture 1 Notes - Introduction, Complexity Review
+    \item \url{https://medium.com/@ssbothwell/counting-inversions-with-merge-sort-4d9910dc95f0}
+
+\end{itemize}
+
+\section*{Problems}
+
+\begin{enumerate}
+    \item 
+    \begin{enumerate}
+        \item (3,4), (3,5) and (4,5) where A[3] = 7, A[4] = 5, and A[5] = 1.
+        
+        \item The completely reverse-sorted descending-order array with items \{n, n-1, n-2, ... , 2, 1\} has the most inversions. It has $1 + 2 + 3 +...+ (n-1) + n$ inversions, or \(\frac{n(n-1)}{2}\). This is also the worst-case runtime of insertion sort.
+        
+        \item Runtime of insertion sort, above the best case $\theta$(n), is proportional to \# of inversions. \\ \\
+        Pseudo-code of insertion sort from lecture 1 uses an outer loop j which traverses the array from 2 to n. This loop runs $\theta$(n) times. \\ \\
+        Inner loop \textbf{i} begins at \textbf{j-1} and traverses backwards, swapping elements as long as A[i] $>$ A[j] (or, in other words, if an inversion exists). Therefore the \# of inversions in the array = \# of swaps that must be made by the inner loop during insertion sort. 
+        
+        \item Solution is mergesort, which runs in $\theta$(\textit{n}log\textit{n}), with an added line of code to count inversions. This added line runs in constant time $\theta$(1); therefore the entire algorithm still runs in $\theta$(\textit{n}log\textit{n}). \\
+        \newline
+        Derived from pseudo-code in Lecture 1 slides:
+        \begin{lstlisting}[
+        linebackgroundcolor={%
+        \ifnum\value{lstnumber}=3
+                \color{green!35}
+        \fi
+        \ifnum\value{lstnumber}=10
+                \color{green!35}
+        \fi
+        \ifnum\value{lstnumber}=31
+                \color{green!35}
+        \fi
+                },
+]
+
+mergeSortInversions(A,p,r) {
+    inv = 0; // counter to track inversions
+    if (p < r) {
+        q = floor((p+r)/2)
+        mergeSortInversions(A,p,q)
+        mergeSortInversions(A, q+1, r)
+        merge(A,p,q,r,inv)
+    }
+    return inv;
+}
+            
+merge(A, p, q, r, inv) {
+    n1 = q - p + 1
+    n2 = r - q
+    copy A[p,q] to L[1...n1]
+    copy A[q+1,r] to R[1...n2]
+    L[n1+1] = R[n1+1] = +Inf
+    i = j = 1
+    for (k=p to r) {
+        if (L[i] < R[j]) {
+            A[k] = L[i]
+            i++
+        }
+        else {
+            // a value R[j] was taken from the right 
+            // side in the process of merging;
+            // R[j] must be an inversion relative to 
+            // everything remaining on the left side
+            A[k] = R[j]
+            inv += L.length - i
+            j++
+        }
+    }
+}
+        \end{lstlisting}
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}
