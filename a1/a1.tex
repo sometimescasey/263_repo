@@ -7,7 +7,8 @@
 
 \lstset{basicstyle=\ttfamily,
 escapechar=|,
-mathescape=true}
+mathescape=true,
+tabsize=2}
 
 \title{CSC263 Assignment 1}
 \author{Juanxi Li}
@@ -101,13 +102,47 @@ merge(A, p, q, r, inv) {
     \item Extract second largest
     
     \begin{enumerate}
-    	\item If using an implementation of nodes which store pointer to parent, we simply run \texttt{max()} and return its parent's value. \newline
-    	
-    	Otherwise, we can modify \texttt{max()} while retaining the same runtime efficiency aka $\theta$(h), or $\theta$(logn) on a perfectly balanced binary tree. \newline \\
-    	Add a variable which tracks the parent of the current node being checked. Return the value of this variable once max is found. Since this line runs in constant time, we still maintain  $\theta$(logn) runtime. \newline
+    	\item This is the same thing as finding max in array Q and deleting the larger of its two children. Here is a modified version of \texttt{extractMax()} from lecture which accompishes this.
     	\begin{lstlisting}
+extractSecondLargest(Q) {
+int secondMax;
+int maxVal;
+
+// max is at 1, its children are at positions 2 and 3
+	
+	if (Q[2] == NULL) {      // second largest doesn't exist
+		return NULL;
+	} 
+	else if (Q[3] == NULL) { // Q only has two items
+		secondMax = 2;
+	} 
+	else {                   // compare Q2 and Q3
+		if (Q[2] >= Q[3]) { secondMax = 2; } 
+		else              { secondMax = 3; }
+	}
+	
+	maxVal = Q[secondMax];	
+	
+	// swap w last, and delete	
+	Q[secondMax] = Q[Q.heapsize];
+	Q.heapsize = Q.heapsize - 1;
+	maxHeapify(Q, secondMax);
+	
+	return maxVal;
+}
     		
     	\end{lstlisting}
+    	
+    	\item 
+    	\begin{itemize}
+    		\item \textbf{Why element is second largest:} because in our implicit definition of the heap as an array, the maximum element is always stored in position 1, and its children are stored in positions 2 and 3. \\
+    		
+    		We compare nodes 2 and 3, returning the larger value. This is the second-largest value, behind max. \\
+    		\item \textbf{Why maintains heap property:} Shape is maintained by swapping the second-largest with the last item and removing the last item. Heap property is maintained by calling maxHeapify() on the position previously occupied by the second-largest, which bubbles that value down until heap property is restored. \\
+    		\item \textbf{Why worst-case run-time is O(logn):} Locating the second-largest item and swapping with last item occurs in constant time. max() is found in $\theta$(1) since it's just the first item, and we make at most one comparision between the children at Q[2] and Q[3] if they exist. The swap takes constant time. \\
+    		
+    		 \texttt{maxHeapify()} bubbles down at most h times where h is height of tree, which is $log(n)$ for binary heap. \\
+    	\end{itemize}
     	
 	\end{enumerate}	
 \end{enumerate}

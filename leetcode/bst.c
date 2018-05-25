@@ -126,6 +126,7 @@ struct Node* delete(struct Node **root, int data) {
 }
 
 int extractSecondLargest(struct Node** x) { // extract and delete second largest
+	// LOL oops this was for wrong q....good learning experience tho
 	if (*x == NULL) {
 		printf("ERROR: tree is empty"); //should throw exception
 	}
