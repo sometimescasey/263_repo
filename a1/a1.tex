@@ -105,10 +105,10 @@ merge(A, p, q, r, inv) {
     	\item This is the same thing as finding max in array Q and deleting the larger of its two children. Here is a modified version of \texttt{extractMax()} from lecture which accompishes this.
     	\begin{lstlisting}
 extractSecondLargest(Q) {
-int secondMax;
-int maxVal;
+	int secondMax;
+	int maxVal;
 
-// max is at 1, its children are at positions 2 and 3
+	// max is at 1, its children are at positions 2 and 3
 	
 	if (Q[2] == NULL) {      // second largest doesn't exist
 		return NULL;
@@ -144,7 +144,33 @@ int maxVal;
     		 \texttt{maxHeapify()} bubbles down at most h times where h is height of tree, which is $log(n)$ for binary heap. \\
     	\end{itemize}
     	
-	\end{enumerate}	
+	\end{enumerate}
+	
+	\item Heap Delete
+	
+	\begin{enumerate}
+		\item This will be very similar to the pseudocode from Q2, but we delete item $i$ instead of item 2 or 3. I assume the function should return the item.
+		\begin{lstlisting}
+heapDelete(A, i) {	
+	int iVal = A[i];	
+	
+	// swap w last, and delete	
+	A[i] = A[A.heapsize];
+	A.heapsize = A.heapsize - 1;
+	maxHeapify(A, i);
+	
+	return iVal;
+}
+		\end{lstlisting}
+		
+		\item 
+		\begin{itemize}
+			\item \textbf{Why works:} Swapping $i$th node with last element, and then deleting last element (by shortening the array) maintains heap shape. Calling \texttt{maxHeapify()} on the subtree rooted at $i$ ensures that the new $i$th element bubbles down until the heap property is restored. Outside of this subtree, no other part of the heap is changed.
+			\item \textbf {Why O(logn):} Location of node to be removed is already known and supplied via integer $i$. Swap takes constant time. After swap, \texttt{maxHeapify()} bubbles element $i$ down max $h_i$ times, where $h_i$ is height of subtree rooted at $i$. Worst case, $i$ is the root and $h_i$ = height of entire tree, which is $log(n)$ for complete binary tree.
+		\end{itemize}
+		
+	\end{enumerate}
+		
 \end{enumerate}
 
 \end{document}
