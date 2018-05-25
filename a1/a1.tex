@@ -22,13 +22,14 @@ mathescape=true}
 \begin{itemize}
     \item Lecture 1 Notes - Introduction, Complexity Review
     \item \url{https://medium.com/@ssbothwell/counting-inversions-with-merge-sort-4d9910dc95f0}
+    \item Delete a node from Binary Search Tree: \url{https://www.youtube.com/watch?v=gcULXE7ViZw}
 
 \end{itemize}
 
 \section*{Problems}
 
 \begin{enumerate}
-    \item 
+    \item Inversions
     \begin{enumerate}
         \item (3,4), (3,5) and (4,5) where A[3] = 7, A[4] = 5, and A[5] = 1.
         
@@ -38,25 +39,30 @@ mathescape=true}
         Pseudo-code of insertion sort from lecture 1 uses an outer loop j which traverses the array from 2 to n. This loop runs $\theta$(n) times. \\ \\
         Inner loop \textbf{i} begins at \textbf{j-1} and traverses backwards, swapping elements as long as A[i] $>$ A[j] (or, in other words, if an inversion exists). Therefore the \# of inversions in the array = \# of swaps that must be made by the inner loop during insertion sort. 
         
-        \item Solution is mergesort, which runs in $\theta$(\textit{n}log\textit{n}), with an added line of code to count inversions. This added line runs in constant time $\theta$(1); therefore the entire algorithm still runs in $\theta$(\textit{n}log\textit{n}). \\
-        \newline
+        \item Solution is mergesort, which runs in $\theta$(\textit{n}log\textit{n}), with an added line of code to increment an inversion counter during the merge step. This line runs in constant time $\theta$(1); therefore the entire algorithm still runs in $\theta$(\textit{n}log\textit{n}). \newline
+        
+        Recursively, total inversions = inversions encountered in sorting left half + inversions encountered in sorting right half + inversions between the two halves. \newline
+        
+        During \texttt{merge()}, the left and right halves are already sorted, and their inversions will already have been recursively counted. So additional inversions can only exist \textit{between} the two halves. When \texttt{merge()} copies a value from the right half back to the main array, it is necessarily an inversion relative to any numbers that remain in the left half. So this is the amount by which we increase the counter. \newline
+        
         Derived from pseudo-code in Lecture 1 slides:
         \begin{lstlisting}[
         linebackgroundcolor={%
         \ifnum\value{lstnumber}=3
                 \color{green!35}
         \fi
-        \ifnum\value{lstnumber}=10
+        \ifnum\value{lstnumber}=9
                 \color{green!35}
         \fi
-        \ifnum\value{lstnumber}=31
+        \ifnum\value{lstnumber}=32
                 \color{green!35}
         \fi
                 },
 ]
 
 mergeSortInversions(A,p,r) {
-    inv = 0; // counter to track inversions
+    inv = 0; // variable to track inversions, 
+    		// gets passed to merge()
     if (p < r) {
         q = floor((p+r)/2)
         mergeSortInversions(A,p,q)
@@ -91,6 +97,19 @@ merge(A, p, q, r, inv) {
 }
         \end{lstlisting}
     \end{enumerate}
+    
+    \item Extract second largest
+    
+    \begin{enumerate}
+    	\item If using an implementation of nodes which store pointer to parent, we simply run \texttt{max()} and return its parent's value. \newline
+    	
+    	Otherwise, we can modify \texttt{max()} while retaining the same runtime efficiency aka $\theta$(h), or $\theta$(logn) on a perfectly balanced binary tree. \newline \\
+    	Add a variable which tracks the parent of the current node being checked. Return the value of this variable once max is found. Since this line runs in constant time, we still maintain  $\theta$(logn) runtime. \newline
+    	\begin{lstlisting}
+    		
+    	\end{lstlisting}
+    	
+	\end{enumerate}	
 \end{enumerate}
 
 \end{document}

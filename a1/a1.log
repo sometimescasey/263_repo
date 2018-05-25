@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2018.5.18)  22 MAY 2018 18:23
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2018.5.18)  25 MAY 2018 09:57
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -504,8 +504,7 @@ Package xcolor Info: Model `wave' substituted by `hsb' on input line 1360.
 (/usr/share/texlive/texmf-dist/tex/latex/lstaddons/lstlinebgrd.sty
 Package: lstlinebgrd 2012/05/03 v0.1 Provides 'listings' options to color the b
 ackground of lines
-)
-No file a1.aux.
+) (./a1.aux)
 \openout1 = `a1.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
@@ -524,6 +523,7 @@ LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 16.
 LaTeX Font Info:    ... okay on input line 16.
 \AtBeginShipoutBox=\box28
 Package hyperref Info: Link coloring OFF on input line 16.
+
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
 
@@ -535,6 +535,8 @@ Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 16.
 LaTeX Info: Redefining \pageref on input line 16.
 LaTeX Info: Redefining \nameref on input line 16.
+
+(./a1.out) (./a1.out)
 \@outlinefile=\write3
 \openout3 = `a1.out'.
 
@@ -577,62 +579,80 @@ sions-[]with-[]merge-[]sort-[]4d9910dc95f0$[]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 37--40
+Underfull \hbox (badness 10000) in paragraph at lines 38--41
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 37--40
+Underfull \hbox (badness 10000) in paragraph at lines 38--41
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 41--56
+Underfull \hbox (badness 10000) in paragraph at lines 42--43
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 44--45
 
  []
 
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (29.5994pt too wide) in paragraph at lines 82--83
+Underfull \hbox (badness 10000) in paragraph at lines 46--47
+
+ []
+
+
+Overfull \hbox (29.5994pt too wide) in paragraph at lines 88--89
 [][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (29.5994pt too wide) in paragraph at lines 84--85
+Overfull \hbox (29.5994pt too wide) in paragraph at lines 90--91
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (29.5994pt too wide) in paragraph at lines 85--86
+Overfull \hbox (29.5994pt too wide) in paragraph at lines 91--92
 [][][][][][][][][][][][][][][][][][][] 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 96.
 [2]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 96.
+Underfull \hbox (badness 10000) in paragraph at lines 104--105
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 106--108
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 106--108
+
+ []
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 115.
+[3]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 115.
  (./a1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 96.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 96.
-
-
-Package rerunfilecheck Warning: File `a1.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `a1.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  D41D8CD98F00B204E9800998ECF8427E;0.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 96.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 115.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 115.
+Package rerunfilecheck Info: File `a1.out' has not changed.
+(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 115.
  ) 
 Here is how much of TeX's memory you used:
- 7176 strings out of 494910
- 100152 string characters out of 6179836
- 196829 words of memory out of 5000000
+ 7187 strings out of 494910
+ 100240 string characters out of 6179836
+ 201894 words of memory out of 5000000
  10400 multiletter control sequences out of 15000+600000
  8102 words of font info for 29 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 29i,6n,35p,308b,1934s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 29i,6n,35p,472b,1932s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texl
@@ -645,10 +665,10 @@ sfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 i10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pf
 b>
-Output written on a1.pdf (2 pages, 124495 bytes).
+Output written on a1.pdf (3 pages, 129713 bytes).
 PDF statistics:
- 120 PDF objects out of 1000 (max. 8388607)
- 102 compressed objects within 2 object streams
- 46 named destinations out of 1000 (max. 500000)
+ 131 PDF objects out of 1000 (max. 8388607)
+ 112 compressed objects within 2 object streams
+ 51 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
