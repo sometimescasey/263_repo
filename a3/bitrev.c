@@ -29,12 +29,8 @@ kbit new_kbit(int index, int k) {
 	// helper function to make a new kbit
 	int* kbit_array = to_kbit(index, k);
 	kbit kbit = {.array = kbit_array, .k = k};
+	free(kbit_array);
 	return kbit;
-}
-
-void free_kbit(kbit *kbit) {
-	// helper function to free the kbit when we're done
-	free(kbit->array);
 }
 
 int get_k(int n) {
@@ -76,14 +72,14 @@ void print_kbit(kbit kbit) {
 	printf("\n");
 }
 
-void bitrev_permute(int *array, int n, int k) { // O(nk)
+int* bitrev_permute(int *array, int n, int k) { // O(nk)
 	printf("n is: %d\n", n);
 	kbit kbit_index;
 	int rev_index;
 
-	int placeholder;
-	
-	for (int i = 0; i < n/2; i++) { // only do first half of array, otherwise everything just gets flipped back again
+	int *permuted_arr = malloc(n * sizeof(int));
+
+	for (int i = 0; i < n; i++) {
 		printf("Processing i = %d\n", i);
 		// get kbit of index
 		kbit_index = new_kbit(i, k);
@@ -96,12 +92,15 @@ void bitrev_permute(int *array, int n, int k) { // O(nk)
 		printf("| i: %d | rev_index: %d\n", i, rev_index);
 		// if in array AND not equal to itself, swap the values
 		if (rev_index != i && rev_index < n) {
-			placeholder = array[i];
-			array[i] = array[rev_index];
-			array[rev_index] = placeholder; 
+			permuted_arr[rev_index] = array[i];
+			permuted_arr[i] = array[rev_index]; 
+		}
+		else {
+			permuted_arr[i] = array[i];
 		}
 	}
-	free_kbit(&kbit_index);
+	
+	return permuted_arr;
 	// final result is just the permuted array
 }
 
@@ -131,14 +130,16 @@ int main(int argc, char** argv) {
 	print_kbit(kbit);
 
 	// test bitrev_permute
-	int n = 5;
-	int test[] = {0, 1, 2, 3, 4};
+	int n = 12;
+	int test[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 	int k = get_k(n);
-	bitrev_permute(test, n, k);
+	int *pointer;
+	pointer = bitrev_permute(test, n, k);
 	for (int i = 0; i < n; i++) {
-		printf("%d", test[i]);
+		printf(" %d ", pointer[i]);
 	}
 	printf("\n");
+	free(pointer);
 
 	return 0;
 
