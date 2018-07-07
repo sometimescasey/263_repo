@@ -5,27 +5,18 @@
 
 typedef struct kbit {
 	int *array;
-	int length;
+	int k;
 } kbit;
 
-int get_k(int n) {
-	// return k
-	int k = log2(n); // floor is k
-	printf("k is %d\n", k);
-	return k;
-}
-
-int* to_kbit(int n) {
-	int k = get_k(n);
+int* to_kbit(int n, int k) { // O(k)
 	int *kbit = malloc(sizeof(int) * k);
 	int remain = n;
 	int a_i;
 	int denom;
-	for (int i = 0; i < k; i++) {
-		denom = pow(2,(k-i));
-		printf("remain: %d | denom: %d\n", remain, denom);
+	for (int i = 0; i < k; i++) { // <- O(k) step. TODO: could optimize by starting from ceil(log2(n))
+		denom = pow(2,(k-i-1));
 		a_i = (remain / denom);
-		printf("here\n");
+		printf("i: %d | remain: %d | denom: %d | a_i: %d\n", i, remain, denom, a_i);
 		kbit[i] = a_i;
 		if (a_i > 0) {
 			remain -= denom;
@@ -34,30 +25,120 @@ int* to_kbit(int n) {
 	return kbit; 
 }
 
+kbit new_kbit(int index, int k) {
+	// helper function to make a new kbit
+	int* kbit_array = to_kbit(index, k);
+	kbit kbit = {.array = kbit_array, .k = k};
+	return kbit;
+}
+
+void free_kbit(kbit *kbit) {
+	// helper function to free the kbit when we're done
+	free(kbit->array);
+}
+
+int get_k(int n) {
+	// return k
+	int k = ceil(log2(n)); // ceiling is k
+	printf("k is %d\n", k);
+	return k;
+}
+
+int to_index(kbit kbit) { // O(k)
+	int index = 0;
+	int power;
+	int k = kbit.k;
+	for (int i = 0; i < k; i++) {
+		power = pow(2, k-i-1);
+		if (kbit.array[i] == 1) {
+			index += power;
+		}
+	}
+	return index;
+}
+
+void rev(kbit *kbit) { // O(k)
+	int* array = kbit->array;
+	int k = kbit->k;
+	int placeholder;
+
+	for (int i = 0; i < k/2; i++) { // <- O(k) step
+		placeholder = array[i];
+		array[i] = array[k-i-1];
+		array[k-i-1] = placeholder; 
+	}
+}
+
 void print_kbit(kbit kbit) {
-	for (int i = 0; i < kbit.length; i++) {
-		printf("|i=%d|", i);
+	for (int i = 0; i < kbit.k; i++) {
 		printf("%d", kbit.array[i]);
 	}
 	printf("\n");
 }
 
-int main() {
+void bitrev_permute(int *array, int n, int k) { // O(nk)
+	printf("n is: %d\n", n);
+	kbit kbit_index;
+	int rev_index;
+
+	int placeholder;
+	
+	for (int i = 0; i < n/2; i++) { // only do first half of array, otherwise everything just gets flipped back again
+		printf("Processing i = %d\n", i);
+		// get kbit of index
+		kbit_index = new_kbit(i, k);
+		// reverse it
+		rev(&kbit_index);
+		// back to base 10
+		rev_index = to_index(kbit_index);
+		printf("kbit_index: ");
+		print_kbit(kbit_index);
+		printf("| i: %d | rev_index: %d\n", i, rev_index);
+		// if in array AND not equal to itself, swap the values
+		if (rev_index != i && rev_index < n) {
+			placeholder = array[i];
+			array[i] = array[rev_index];
+			array[rev_index] = placeholder; 
+		}
+	}
+	free_kbit(&kbit_index);
+	// final result is just the permuted array
+}
+
+int main(int argc, char** argv) {
+	int t;
+	if (argc == 2) {
+		t = strtol(argv[1], NULL, 10);
+	} else {
+		printf("Usage: bitrev number\n");
+		exit(1);
+	}
 
 	// unit test for exp()
 	int q = 5;
 	printf("testing exp(): \n");
-	printf("%d to the power of %d = %d\n", N, q, (int) pow(N,q));
+	printf("%d to the power of %d = %d\n", t, q, (int) pow(t,q));
 	
-	// unit test for to_kbit()
-	int* kbit_array = to_kbit(N);
-	int k = get_k(N);
+	// unit test for new_kbit()
+	printf("\ntesting new_kbit(): \n");
+	kbit kbit = new_kbit(t, 4);
 
-	kbit kbit = {.array = kbit_array, .length = k};
-
-	// to do: make this a struct to make stuff easier
-	// or sizeof()?
+	// Todo: helper fxn for new kbit
+	// test if working!
 	print_kbit(kbit);
+	rev(&kbit);
+	printf("rev'd\n");
+	print_kbit(kbit);
+
+	// test bitrev_permute
+	int n = 5;
+	int test[] = {0, 1, 2, 3, 4};
+	int k = get_k(n);
+	bitrev_permute(test, n, k);
+	for (int i = 0; i < n; i++) {
+		printf("%d", test[i]);
+	}
+	printf("\n");
 
 	return 0;
 
