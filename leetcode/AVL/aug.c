@@ -8,6 +8,8 @@ typedef struct Node {
 	struct Node* parent;
 	int height;
 	int bf;
+	int subtreeSum;
+	int size;
 }Node;
 
 // helper function to create new node
@@ -19,6 +21,9 @@ struct Node* getNewNode(int data) {
 	newNode->data = data; // deference pointer newNode and point it at data
 	newNode->left = newNode->right = newNode->parent = NULL; // no left or right children right now
 	newNode->height = newNode->bf = 0;
+	newNode->subtreeSum = data;
+	newNode->size = 1; //itself
+	// printf("new node created with data %d\n", newNode->data);
 	return newNode;
 }
 
@@ -48,6 +53,44 @@ int getData(struct Node *x) {
 	}
 }
 
+int hasParent(struct Node *x) {
+	// helper function: check for parent to handle null case
+	if (x->parent) {
+		printf("x->parent wasn't null for x = %d\n", x->data);
+		return 1;
+	} else {
+		printf("x->parent was null for x = %d\n", x->data);
+		return 0;
+	}
+}
+
+void updateSubtreeSum(struct Node *x) {
+	// does size too, just too lazy to rename
+	// update sum of subtree rooted at x
+	printf("updateSubtreeSum called on %d\n", x->data);
+	int leftSum = 0;
+	int rightSum = 0;
+	int leftSize = 0;
+	int rightSize = 0;
+
+	if (x->left) {
+		leftSum = x->left->subtreeSum;
+		leftSize = x->left->size;
+	}
+	if (x->right) {
+		rightSum = x->right->subtreeSum;
+		rightSize = x->right->size;
+	}
+
+	printf("x: %d | leftSum is %d\n", x->data, leftSum);
+	printf("x: %d | rightSum is %d\n", x->data, rightSum);
+	printf("x: %d | x->data is %d\n", x->data, x->data);
+	x->subtreeSum = leftSum + rightSum + x->data;
+	x->size = leftSize + rightSize + 1;
+	printf("x: %d | x->subtreeSum is %d\n", x->data, x->subtreeSum);
+	printf("x: %d | x->size is %d\n", x->data, x->size);
+}
+
 // only heights above inserted/deleted items change
 void updateHeightBf(struct Node *x) {
 	struct Node *current = x;
@@ -56,11 +99,13 @@ void updateHeightBf(struct Node *x) {
 		int right_h = getHeight(current->right);
 		current->height = max_h(left_h,right_h) + 1;
 		current->bf = left_h - right_h;
+		updateSubtreeSum(current);
 		current = current->parent;  
 	}
 }
 
 struct Node* leftRotate(Node *x) {
+	printf("calling leftRotate on %d\n", x->data);
 	// mirror image of rightRotate
 	Node *x_parent = x->parent;
 	int is_left; // 1 if x is a left child, 0 if x is a right child
@@ -70,12 +115,14 @@ struct Node* leftRotate(Node *x) {
 		if (x_parent->left == x) {
 			is_left = 1;
 		} else {
+			printf("for leftRotate on 3 (%d), this should fire\n", x->data);
 			is_left = 0;
 		}
 	}
 
 	// y is the current right child of x, which will be lifted up
 	Node *y = x->right;
+	printf("for x = 3 (%d), y should be 4: y->data is: %d\n", x->data, y->data);
 
 	
 	// y_left gets adopted and becomes x_right (it may be null)
@@ -93,27 +140,34 @@ struct Node* leftRotate(Node *x) {
 	// x's parent gets y as ___ child
 	y->parent = NULL;
 	if (is_left != -1) {
+		printf("starting the tree\n");
 		y->parent = x_parent;	
 	}
-	else if (is_left == 1) {
+	
+	if (is_left == 1) {
 		x_parent->left = y; 
+		printf("!!!!!! this line should not print either !!!!!!\n");
 	} 
 	else if (is_left == 0){
+		printf("for x=3 this should show x_parent->right = y: %d->right = %d\n", x_parent->data, y->data);
 		x_parent->right = y;
 	}
 	else {
 		// x had no parent, do nothing
+		printf("!!!!!! this line should not print !!!!!!\n");
 		;
 	}
 
 
 	// update height and bf on x and x's parents
 	updateHeightBf(x);
+	updateSubtreeSum(x);
 	
 	return y;
 }
 
 struct Node* rightRotate(Node *x) {
+	printf("calling rightRotate on %d\n", x->data);
 	// rightRotate subtree rooted at x; return pointer to new root
 	Node *x_parent = x->parent;
 	int is_left; // 1 if x is a left child, 0 if x is a right child
@@ -161,12 +215,14 @@ struct Node* rightRotate(Node *x) {
 
 	// update height and bf on x and x's parents
 	updateHeightBf(x);
+	updateSubtreeSum(x);
 	
 	return y;
 }
 
 struct Node* balance(Node *x) {
 	struct Node* new_x = x;
+	printf("running balance() on x=%d\n", x->data);
 	// we've defined balance as left.height - right.height
 	// balance the subtree rooted at x, assuming x->left and x->right are already AVL
 	// no need to recurse up
@@ -210,42 +266,77 @@ struct Node* balance(Node *x) {
 	return new_x;
 }
 
-void insert(struct Node** root, struct Node** parent, int data) { 
+void insert(struct Node** root, struct Node** parent, int data, struct Node **rootTracker) {
+	// make an insertion into the subtree rooted at root
+	// set rootTracker to the new topRoot
+	struct Node *newroot = getNewNode(0);
+
+	printf("********************* attempting to insert %d\n", data); 
 	// needs to take pointer to pointer to root
 	// otherwise value stays local; and returning is wasteful
+
+	struct Node *null_ptr = NULL;  
 	
 	// case 1: tree is empty
-	if(*root == NULL) {
-		*root = getNewNode(data);
+	if((*root) == NULL) {
+		(*root) = getNewNode(data);
+		printf("********************* inserted %d\n", (*root)->data);
+		
 		if (parent != NULL) {
+
+			// set parent of inserted item
+			// printf("trying to set parent\n");
 			(*root)->parent = *parent;
+			// printf("parent set to %d\n", (*root)->parent->data);
+
+			// set parent's left or right child to inserted item
+			if (data <= (*parent)->data) {
+				(*parent)->left = *root;
+			}
+			else {
+				(*parent)->right = *root;
+			}
 			updateHeightBf(*parent);
+			updateSubtreeSum(*root);
 
 			// only balance of inserted item and its parents can be affected
 			// so check up the tree
 			// also be sure to update root after balancing
-			struct Node *oldroot = *root;
-			struct Node *newroot;
-			
 			struct Node *current = *root;
-			while (current != NULL) {
-				newroot = balance(current);
-				current = current->parent;  
+			//printf("runs fine to here\n");
+			newroot = balance(current);
+			while (current->parent) {
+				printf("fine\n");
+				current = current->parent;
+				newroot = balance(current); 
+				// printf("1. newroot is now: %d\n", newroot->data);
+				(*rootTracker) = newroot;
+				// printf("root->data is now: %d\n", (*root)->data);
 			}
-
-			*root = newroot;
 		}
 	}
 	else if(data < (*root)->data) {
 		// less than root; go to left side, recursively call insert on left child
-		insert(&((*root)->left), root, data);
+		if ((*root)->left) {
+			insert(&((*root)->left), root, data, rootTracker);
+		}
+		else {
+			insert(&null_ptr, root, data, rootTracker);
+		}
 	}
 	else if(data >= (*root)->data) {
 		// greater than root's data; recursively call right side
 		// also allow dupes and place to the right
 		// notice we need to deref once, get right, then get address
-		insert(&((*root)->right), root, data); 
+		if ((*root)->right) {
+			insert(&((*root)->right), root, data, rootTracker);
+		}
+		else {
+			insert(&null_ptr, root, data, rootTracker);
+		}
 	}
+	// printf("2. rootTracker is now: %d\n", (*rootTracker)->data);
+	// return newroot->data;
 }
 
 struct Node* search(struct Node** root, int data) {
@@ -287,23 +378,39 @@ int max(struct Node** x) {
 	return (*x)->data;
 }
 
-struct Node* delete(struct Node **root, int data) { 
+struct Node* delete(struct Node **root, int data, struct Node **rootTracker) { 
 // will run this recursively in order to "find" the node
 // first if-else tree takes care of setting parent references to NULL
+
 	if (*root == NULL) return *root; // tree is empty, return null
 	else if (data < (*root)->data) {
 		// look left
-		(*root)->left = delete(&((*root)->left), data);
+		(*root)->left = delete(&((*root)->left), data, rootTracker);
 	}
 	else if (data > (*root)->data) {
 		// look right
-		(*root)->right = delete(&((*root)->right), data);
+		(*root)->right = delete(&((*root)->right), data, rootTracker);
 	}
 	else {
 		// equal! found ya. this tree takes care of freeing memory
 		// update height on root's parent and each of its parents
+		struct Node *newroot = getNewNode(0);
+
 		(*root)->height -= 1;
 		updateHeightBf((*root)->parent);
+		updateSubtreeSum((*root)->parent);
+
+		// only balance of inserted item and its parents can be affected
+		// so check up the tree
+		// also be sure to update root after balancing
+		struct Node *current = *root;
+		newroot = balance(current);
+		while (current->parent) {
+			current = current->parent;
+			newroot = balance(current); 
+			(*rootTracker) = newroot;
+		}
+
 
 		// Case 1: no children
 		if ((*root)->left == NULL && (*root)->right == NULL) { 
@@ -335,26 +442,10 @@ struct Node* delete(struct Node **root, int data) {
 				temp = temp->left;	
 			}
 			(*root)->data = temp->data;
-			(*root)->right = delete(&((*root)->right), temp->data);
+			(*root)->right = delete(&((*root)->right), temp->data, rootTracker);
 		}
 	}
 	return *root;
-}
-
-int extractSecondLargest(struct Node** x) { // extract and delete second largest
-	// LOL oops this was for wrong q....good learning experience tho
-	if (*x == NULL) {
-		printf("ERROR: tree is empty"); //should throw exception
-	}
-	struct Node *one_up = NULL;
-
-	while ((*x)->right != NULL) {
-		one_up = *x;
-		x = &((*x)->right);	
-	}
-	int secondLargest = (one_up)->data;
-	delete(x, secondLargest);
-	return secondLargest;
 }
 
 void inOrderWalk(struct Node** x) {
@@ -364,9 +455,13 @@ void inOrderWalk(struct Node** x) {
 	struct Node *left = (*x)->left;
 	struct Node *right = (*x)->right;
 
+	printf("---------- calling IOWL\n");
 	inOrderWalk(&left);
+	printf("---------- IOWL complete\n");
 	printf("IOW: %d\n", (*x)->data);
+	printf("---------- calling IOWR\n");
 	inOrderWalk(&right);
+	printf("---------- IOWR complete\n");
 	}
 }
 
@@ -399,12 +494,67 @@ void postOrderWalk(struct Node** x) {
 		preOrderWalk(&((*x)->right));
 	}
 }
-	
+
+// void insert(struct Node** root, struct Node** parent, int data, struct Node **rootTracker)
+struct Node* insertWrapper(struct Node** root, int data) {
+	struct Node* newRoot;
+	insert(root, NULL, data, &newRoot);
+	return newRoot;
+}
+
+struct Node* deleteWrapper(struct Node** root, int data) {
+	printf("trying to delete %d\n", data);
+	struct Node* newRoot;
+	delete(root, data, &newRoot);
+	return newRoot;
+}
+
+int extractSecondLargest(struct Node** x) { // extract and delete second largest
+	// LOL oops this was for wrong q....good learning experience tho
+	if (*x == NULL) {
+		printf("ERROR: tree is empty"); //should throw exception
+	}
+	struct Node *one_up = NULL;
+
+	while ((*x)->right != NULL) {
+		one_up = *x;
+		x = &((*x)->right);	
+	}
+	int secondLargest = (one_up)->data;
+	deleteWrapper(x, secondLargest);
+	return secondLargest;
+}
+
+struct Node* selectKey(struct Node* x, int i) {
+	// select node at index i
+	printf("this is fine\n");
+	int left_size = 0;
+	if (x->left) {
+		left_size = x->left->size; 
+	}
+	printf("%d\n", left_size);
+	int r = (left_size)+1;
+	if (i == r) {
+		return x;
+	}
+	if (i < r) {
+		printf("this\n");
+		return selectKey(x->left, i);
+	} else {
+		return selectKey(x->right, i-r);
+	}
+}	
+
+int rank(struct Node* root, int value) {
+	// find rank of value x
+	return 0;
+}
 
 int main() {
 	// need to store a pointer to root which refers to the entire tree
 	// start with rootPtr = NULL for empty tree
-	struct Node* root = NULL;
+	struct Node* root = malloc(sizeof(struct Node*));
+	root = NULL;
 
 	// insert(&root, NULL, 15);
 	// insert(&root, NULL, 6);
@@ -420,12 +570,43 @@ int main() {
 	// root = delete(&root, 15);
 	// root = delete(&root, 20);
 
-	insert(&root, NULL, 3);
-	insert(&root, NULL, 2);
-	insert(&root, NULL, 1);
 
+
+
+	insert(&root, NULL, 1, NULL); // janky
 	inOrderWalk(&root);
 	printf("-------\n");
+	
+	root = insertWrapper(&root, 3);
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	root = insertWrapper(&root, 7);
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	root = insertWrapper(&root, 20);
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	root = insertWrapper(&root, 21);
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	root = insertWrapper(&root, 30);
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	root = deleteWrapper(&root, 20);
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	struct Node *selectedNode = selectKey(root, 2);
+	printf("Node at index 2 is: %d\n", selectedNode->data);
+
+	root = NULL;
+	free(root);
+
 
 	return 0;
 };

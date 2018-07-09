@@ -1,5 +1,7 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
 
 \usepackage{listings}
 \usepackage{xcolor}
@@ -56,6 +58,9 @@ showstringspaces=false,}
     \item Lecture 1 Notes - Introduction, Complexity Review
     \item \url{https://medium.com/@ssbothwell/counting-inversions-with-merge-sort-4d9910dc95f0}{}
     \item Delete a node from Binary Search Tree: \url{https://www.youtube.com/watch?v=gcULXE7ViZw}
+    \item Young tableaus: \url{https://ita.skanev.com/06/problems/03.html}
+    \item \url{https://kukuruku.co/post/young-tableaux-in-the-tasks-of-searching-and-sorting/}
+   	\item \url{http://codinggeeks.blogspot.com/2010/04/young-tableau.html}
 
 \end{itemize}
 
@@ -347,8 +352,238 @@ void insert(int *arr, int key, int *heapsize) {
 	
 	If $Y[m,n] > -\infty$, all elements $Y[a,b]$ for $a\leq m$ and $b\leq n$ must be $\geq$ $Y[m,n]$, or $> -\infty$. Therefore no elements are empty and the tableau must be full.
 	
-	\end{enumerate}  
+	\item Again, will put here a working implementation in C. Not all function definitions are shown.
 	
+	\begin{lstlisting}[language=C, style=CStyle]
+int extractMax(tableau *t) {
+	int max = t->elements[0];
+	if(max == -INT_MAX){
+		printf("ERROR: tableau is empty. No max to return\n");
+	} else {
+		int last = t->m*t->n-1;
+		// swap max and last item (smallest)
+		exchange(t, 0, last);
+		// empty out the last position
+		t->elements[last] = -INT_MAX;
+		// recursively bubble down the element at 0th position
+		cell topLeftCell = cellAt(1,1);
+		bubbleDown(t, topLeftCell);
+	}
+	return max;	
+}
+
+void bubbleDown(tableau *t, cell c) {
+// Compare down, compare right. 
+// If smaller than either/both, exchange w larger item
+// Then call itself on the newly exchanged cells
+
+	cell pos = c; // track position in the tableau
+	int c_v = get(t,c); // get c's value
+
+	char look; // which directions can we look?
+	cell d = lookDown(c);
+	cell r = lookRight(c);
+	
+	\end{lstlisting}
+	\newpage
+	\begin{lstlisting}[language=C, style=CStyle]
+	
+	if(isIn(t,d)) {
+		if(isIn(t,r)) { look = 'b'; } // can look both ways
+		else { look = 'd'; }  // look down
+	} else {
+		if(isIn(t,r)){ look = 'r'; } // look right
+	}
+
+	char exch; // which exchange case are we doing?
+	int d_v;
+	int r_v;
+
+	switch(look) {
+		case 'b': // look both ways
+			d_v = get(t, d);
+			r_v = get(t, r);
+
+			if (c_v >= d_v && c_v >= r_v) { ; } // all is ok
+			else if (c_v < d_v && c_v >= r_v) { exch = 'd'; }	
+			else if (c_v < r_v && c_v >= d_v) { exch = 'r'; }
+			else { // smaller than both; swap with bigger one
+				if (r_v > d_v) { exch = 'r'; }
+				else { exch = 'd'; }
+			}
+			break;
+		case 'r': // check r
+			r_v = get(t, r);
+			if (c_v < r_v) { exch = 'r'; }
+			break;
+		case 'd': //check d
+			d_v = get(t, d);
+			if (c_v < d_v) { exch = 'd'; }
+			break;
+	}
+
+	// do exchange
+	switch(exch) {
+		case 'd':
+			exchange(t, getIndex(t, c), getIndex(t, d));
+			pos = d;
+			break;
+		case 'r':
+			exchange(t, getIndex(t, c), getIndex(t, r));
+			pos = r;
+			break;
+		default:
+			break; // no exchange
+	}
+
+	// if exchanged, recursively call bubbleDown on the two exchanged positions
+	if (0 == cellsEqual(t, pos, c)) { 
+		bubbleDown(t, pos);
+		bubbleDown(t, c); }
+
+	\end{lstlisting}
+	
+	\textbf{Runtime analysis of \texttt{extractMax()}:}
+	\begin{itemize}
+		\item Finding max happens in constant time (first item in the array).
+	\item \texttt{bubbleDown()} from any given cell can occur a maximum of $m-1$ times towards the right, and $n-1$ times downwards.
+	\item Therefore worst-case runtime of extractMax() is $O(m+n)$. 
+	\end{itemize}	
+	
+	\newpage
+	\item Again, C implementation of insertion:
+	
+	\begin{lstlisting}[language=C, style=CStyle]
+void insert(tableau *t, int value) {
+	int bottomRight = t->elements[t->m*t->n-1];
+	// always put at bottom-right most position and bubble up
+	if(bottomRight != -INT_MAX) {
+	// tableau is full
+		printf("ERROR: tableau full, cannot insert\n");
+	}
+	else {
+		t->elements[t->m*t->n-1] = value;
+		cell bottomRightCell = cellAt(t->m, t->n);
+		bubbleUp(t, bottomRightCell);
+	}
+}
+
+// bubbleUp() code is the mirror image of bubbleDown() in the opposite directions (up and to the left) - won't include again here
+	\end{lstlisting}
+	
+	\textbf{Runtime analysis of \texttt{insert()}:}
+	\begin{itemize}
+		\item Checking bottom right for non-fullness and adding an element happens in constant time.
+	\item \texttt{bubbleUp()} code is equivalent to \texttt{bubbleDown()} code in the opposite direction. Any given cell can bubble up a maximum of $m-1$ times towards the left, and $n-1$ times upwards.
+	\item Therefore worst-case runtime of insert() is $O(m+n)$. 
+	\end{itemize} 
+	
+	\item C implementation of search:
+	
+	\begin{lstlisting}[language=C, style=CStyle]
+int search(tableau *t, cell c, int value) {
+	// start top right
+	// if too big, everything to its left is also too big, so check the next row
+	// if too small, everything below it is by def too small, so move left
+	// repeat until found or have eliminated entire tableau
+	cell current = c;
+	int cur_val = get(t, c);
+
+	if (cur_val == value) {
+		int index = getIndex(t, current);
+		printf("found at getIndex() = %d\n", index);
+		return index;
+	} else if (cur_val > value) {
+		// go down a row
+		current.j += 1;
+	} else {
+		// go left a column
+		current.i -=1;
+	}
+	// as long as new cell is valid, recurse on search
+	if (isIn(t, current)) {
+		return search(t, current, value);
+	}
+	// if all of the above fails to return anything
+	return -1;
+}
+
+int searchFromStart(tableau *t, int value) {
+	cell startCell = cellAt(t->m, 1);
+	return search(t, startCell, value);
+}	\end{lstlisting}
+
+\textbf{Runtime analysis of \texttt{search()}:}
+	\begin{itemize}
+		\item Making comparisons of current value against search value occur in constant time.
+	\item \texttt{search()} recurs every time we move down or move left and still find a valid cell inside the tableau. By definition if we start from the top right cell, this can only happen (m-1) + (n-1) times.
+	\item Therefore worst-case runtime of search() is $O(m+n)$.
+	\end{itemize}
+	
+	\item This is pretty straightforward: we run \texttt{extractMax()} over and over and output the values in order until the Young tableau is empty. This outputs a reverse sorted list; we can flip it if needed by reading this list backwards (which will add $O(n^2)$ steps).
+	
+	\begin{lstlisting}[language=C, style=CStyle]
+	void sort(tableau * t) {
+	int dim = (t->m) * (t->n); 
+	for (int i = 0; i < dim; i++) {
+		printf("%d ",extractMax(t)); // or add this to another array etc
+		}
+	}
+	\end{lstlisting}
+	\textbf{Runtime analysis of \texttt{sort()}:}
+	\begin{itemize}
+		\item Per question c, each call to \texttt{extractMax()} runs in $O(m+n)$, or $O(2n)$ for $m=n$.
+		\item We run \texttt{extractMax()} once for each item in the tableau, which is $n \times m = n^2$ for $n=m$.
+	\item Therefore worst-case runtime of sort() is $O(n \times n^2) = O(n^3)$.
+	\end{itemize}
+	
+	\end{enumerate}
+	
+	\item The solution is basically to use an in-order graph walk to count the number of items and push the in-order values into a stack. We then return item $n/2$ from that stack.
+	
+	\begin{lstlisting}
+	inOrderWalkCount(Node x, int counter, Stack stack) {
+		if(x != NULL ) {
+
+		// initially called with x = root
+		Node left = x.left;
+		Node right = x.right;
+
+		inOrderWalkCount(left, counter, stack);
+		stack.push(x.value);
+		counter += 1;
+		inOrderWalkCount(right, counter, stack);
+		}
+	}
+
+	int findMedian(Node x) {
+		// returns median of tree rooted at x
+		// so call this on root
+		int counter = 0;
+		Stack stack = new Stack; // stack of ints		
+		
+		inOrderWalkCount(x, counter, stack);
+		int medianIndex;
+		if (counter % 2 == 0) { // even
+			medianIndex = counter / 2;
+		}
+		else {
+			medianIndex = (counter + 1 / 2); // use ceiling, per assignment definition
+		}
+
+		// pop items from stack until just before the median
+		for (int i = 1; i < medianIndex; i++) {
+			stack.pop();
+		}
+	
+		return stack.pop();
+	\end{lstlisting}
+	\textbf{Runtime analysis of \texttt{findMedian()}:}
+	\begin{itemize}
+		\item \texttt{inOrderWalkCount()} runs in $O(n)$ time (since we simply traverse every item in the tree).
+		\item \texttt{stack.pop()} runs $n/2$ times.
+	\item Therefore worst-case runtime of \texttt{inOrderWalkCount()} is $O(n + n/2) = O(n)$.
+	\end{itemize}   
 	
 \end{enumerate}
 

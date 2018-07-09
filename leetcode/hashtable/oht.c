@@ -9,9 +9,7 @@
 #define prime2 167
 
 typedef struct HashItem {
-	int key;
-	int value;
-	int delete_marker; // 1 if deleted, 0 otherwise
+	int key, value, delete_marker; // delete_marker = 1 if deleted, 0 otherwise
 } HashItem;
 
 HashItem newItem(int key, int value) {
@@ -24,9 +22,7 @@ HashItem newItem(int key, int value) {
 	return x;
 }
 
-int doubleHash(int k, int i) {
-	return (k % prime1 + (i * (k % prime2)));
-}
+int doubleHash(int k, int i) { return (k % prime1 + (i * (k % prime2))); }
 
 void hashInsert(HashItem **table, HashItem *x) {
 	int i = 1;

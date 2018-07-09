@@ -141,6 +141,40 @@ int extractSecondLargest(struct Node** x) { // extract and delete second largest
 	return secondLargest;
 }
 
+void inOrderWalk(struct Node** x) {
+	if((*x) != NULL ) {
+
+	// Node** x is pointer to root
+	struct Node *left = (*x)->left;
+	struct Node *right = (*x)->right;
+
+	inOrderWalk(&left);
+	printf("IOW: %d\n", (*x)->data);
+	inOrderWalk(&right);
+	}
+}
+
+void inOrderWalkCount(struct Node** x,  int *counter) {
+	if((*x) != NULL ) {
+
+	// Node** x is pointer to root
+	struct Node *left = (*x)->left;
+	struct Node *right = (*x)->right;
+
+	inOrderWalkCount(&left, counter);
+	printf("IOWC: %d\n", (*x)->data);
+	*counter += 1;
+	inOrderWalkCount(&right, counter);
+	}
+}
+
+void preOrderWalk(struct Node** x) {
+	if(*x != NULL) {
+		printf("%d\n", (*x)->data);
+		preOrderWalk(&((*x)->left));
+		preOrderWalk(&((*x)->right));
+	}
+}
 	
 
 int main() {
@@ -154,6 +188,11 @@ int main() {
 	insert(&root, 8);
 	insert(&root, 12);
 	insert(&root, -1);
+
+	inOrderWalk(&root);
+	printf("-------\n");
+
+	preOrderWalk(&root);
 
 	int number;
 	printf("Enter a number:\n");
@@ -181,6 +220,7 @@ int main() {
 	printf("Max is: %d\n", max(&root));
 	printf("Min is: %d\n", min(&root));
 	printf("second largest is: %d\n", extractSecondLargest(&root));
+
 
 	
 	return 0;
