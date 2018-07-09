@@ -16,6 +16,7 @@ int* to_kbit(int n, int k) { // O(k)
 	for (int i = 0; i < k; i++) { // <- O(k) step
 		denom = pow(2,(k-i-1));
 		a_i = (remain / denom);
+		printf("i: %d | remain: %d | denom: %d | a_i: %d\n", i, remain, denom, a_i);
 		kbit[i] = a_i;
 		if (a_i > 0) {
 			remain -= denom;
@@ -35,6 +36,7 @@ kbit new_kbit(int index, int k) {
 int get_k(int n) {
 	// return k
 	int k = ceil(log2(n)); // ceiling is k
+	printf("k is %d\n", k);
 	return k;
 }
 
@@ -56,7 +58,7 @@ void rev(kbit *kbit) { // O(k)
 	int k = kbit->k;
 	int placeholder;
 
-	for (int i = 0; i < k/2; i++) { // <- O(k) step
+	for (int i = 0; i < k/2; i++) { // <- O(k) step. Stop halfway, or they'll all get swapped back again
 		placeholder = array[i];
 		array[i] = array[k-i-1];
 		array[k-i-1] = placeholder; 
@@ -77,12 +79,16 @@ int* bitrev_permute(int *array, int n, int k) { // O(nk)
 	int *permuted_arr = malloc(n * sizeof(int));
 
 	for (int i = 0; i < n; i++) { // <- loop runs n times
+		printf("Processing i = %d\n", i);
 		// get kbit of index
 		kbit_index = new_kbit(i, k); // <- O(k) to convert to k-bit representation
 		// reverse it
 		rev(&kbit_index); // <- O(k) to reverse
 		// back to base 10
 		rev_index = to_index(kbit_index); // <- O(k) to turn back into index (base 10)
+		printf("kbit_index: ");
+		print_kbit(kbit_index);
+		printf("| i: %d | rev_index: %d\n", i, rev_index);
 		// if in reversed index is in array AND not equal to i, swap the values
 		if (rev_index != i && rev_index < n) {
 			permuted_arr[rev_index] = array[i];
@@ -121,8 +127,8 @@ int main(int argc, char** argv) {
 	print_kbit(kbit);
 
 	// test bitrev_permute
-	int n = 13;
-	int test[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+	int n = 12;
+	int test[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 	int k = get_k(n);
 	int *pointer;
 	pointer = bitrev_permute(test, n, k);
