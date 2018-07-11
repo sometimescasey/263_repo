@@ -80,12 +80,12 @@ void freeVertex(gpointer key, gpointer value, gpointer userdata)
 {
     vertex *deref = ((vertex*) value);
     free(deref->neighbours);
-    g_free(deref);
+    g_free(value);
 }
 
-void freeVertices(Graph * graph) {
-	// print this graph's adjacency table.
+void freeHashTable(Graph * graph) {
 	g_hash_table_foreach(graph->adj_list, freeVertex, NULL);
+	g_hash_table_destroy(graph->adj_list);
 }
 
 void addNeighbour(Graph *graph, vertex *vertex, int neighbour) {
@@ -231,11 +231,11 @@ int main(int argc, char ** argv) {
 	Graph *graph = newGraph();
 
 // TEST CASE 1: 2 paths ----------------------
-	addVertex(graph, 1);
-	addVertex(graph, 2);
-	addVertex(graph, 3);
-	addVertex(graph, 4);
-	addVertex(graph, 5);
+	vertex **vertex_array = malloc(5 * sizeof(vertex*));
+
+	for (int i = 0; i < 5; i++) {
+		vertex_array[i] = addVertex(graph, i+1);	
+	}
 
 	addEdge(graph, 1, 2, 1);
 	addEdge(graph, 1, 3, 1);
@@ -246,7 +246,7 @@ int main(int argc, char ** argv) {
 	vertex *v = getVertex(graph, 5);
 	vertex *u = getVertex(graph, 1);
 
-// TEST CASE 2: 8 paths ---------------------
+// TEST CASE 2: 8 paths ----------------------
 	// addVertex(graph, 1);
 	// addVertex(graph, 2);
 	// addVertex(graph, 3);
@@ -279,7 +279,7 @@ int main(int argc, char ** argv) {
 
 // ------------------------------------------
 
-// TEST CASE 3: 4 paths ---------------------
+// TEST CASE 3:-------- ---------------------
 
 	// addVertex(graph, 1);
 	// addVertex(graph, 2);
@@ -306,8 +306,13 @@ int main(int argc, char ** argv) {
 	TAILQ_INIT(&head);
 	path_count(graph, u, v);
 
-	freeVertices(graph);
-	g_free(graph->adj_list);
+	for (int i = 0; i < 5; i++) {
+		free(vertex_array[i]);	
+	}
+
+	free(vertex_array);
+	freeHashTable(graph);
+	
 	free(graph);
 	return 0;
 }
