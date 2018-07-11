@@ -76,6 +76,18 @@ vertex * addVertex(Graph *graph, int value) {
 	return v;
 }
 
+void freeVertex(gpointer key, gpointer value, gpointer userdata)
+{
+    vertex *deref = ((vertex*) value);
+    free(deref->neighbours);
+    g_free(deref);
+}
+
+void freeVertices(Graph * graph) {
+	// print this graph's adjacency table.
+	g_hash_table_foreach(graph->adj_list, freeVertex, NULL);
+}
+
 void addNeighbour(Graph *graph, vertex *vertex, int neighbour) {
 	// check that neighbour isn't already in list
 	for (int i = 0; i < vertex->list_len; i++) {
@@ -294,5 +306,8 @@ int main(int argc, char ** argv) {
 	TAILQ_INIT(&head);
 	path_count(graph, u, v);
 
+	freeVertices(graph);
+	g_free(graph->adj_list);
+	free(graph);
 	return 0;
 }
