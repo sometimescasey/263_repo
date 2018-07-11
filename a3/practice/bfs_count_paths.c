@@ -80,7 +80,6 @@ void freeVertex(gpointer key, gpointer value, gpointer userdata)
 {
     vertex *deref = ((vertex*) value);
     free(deref->neighbours);
-    g_free(value);
 }
 
 void freeHashTable(Graph * graph) {
@@ -231,9 +230,10 @@ int main(int argc, char ** argv) {
 	Graph *graph = newGraph();
 
 // TEST CASE 1: 2 paths ----------------------
-	vertex **vertex_array = malloc(5 * sizeof(vertex*));
+	int v_count = 5;
+	vertex **vertex_array = malloc(v_count * sizeof(vertex*));
 
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < v_count; i++) {
 		vertex_array[i] = addVertex(graph, i+1);	
 	}
 
@@ -247,14 +247,12 @@ int main(int argc, char ** argv) {
 	vertex *u = getVertex(graph, 1);
 
 // TEST CASE 2: 8 paths ----------------------
-	// addVertex(graph, 1);
-	// addVertex(graph, 2);
-	// addVertex(graph, 3);
-	// addVertex(graph, 4);
-	// addVertex(graph, 5);
-	// addVertex(graph, 6);
-	// addVertex(graph, 7);
-	// addVertex(graph, 8);
+	// int v_count = 8;
+	// vertex **vertex_array = malloc(v_count * sizeof(vertex*));
+
+	// for (int i = 0; i < v_count; i++) {
+	// 	vertex_array[i] = addVertex(graph, i+1);	
+	// }
 
 	// addEdge(graph, 1, 2, 1);
 	// addEdge(graph, 1, 3, 1);
@@ -279,14 +277,14 @@ int main(int argc, char ** argv) {
 
 // ------------------------------------------
 
-// TEST CASE 3:-------- ---------------------
+// TEST CASE 3: 4 paths ---------------------
 
-	// addVertex(graph, 1);
-	// addVertex(graph, 2);
-	// addVertex(graph, 3);
-	// addVertex(graph, 4);
-	// addVertex(graph, 5);
-	// addVertex(graph, 6);
+	// int v_count = 6;
+	// vertex **vertex_array = malloc(v_count * sizeof(vertex*));
+
+	// for (int i = 0; i < v_count; i++) {
+	// 	vertex_array[i] = addVertex(graph, i+1);	
+	// }
 
 	// addEdge(graph, 1, 2, 1);
 	// addEdge(graph, 1, 3, 1);
@@ -306,13 +304,13 @@ int main(int argc, char ** argv) {
 	TAILQ_INIT(&head);
 	path_count(graph, u, v);
 
-	for (int i = 0; i < 5; i++) {
+	// cleanup
+	for (int i = 0; i < v_count; i++) {
 		free(vertex_array[i]);	
 	}
-
 	free(vertex_array);
 	freeHashTable(graph);
-	
 	free(graph);
+
 	return 0;
 }
