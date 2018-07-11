@@ -184,6 +184,7 @@ int bfs(Graph *graph, int start) {
 }
 
 int bfs_countback(Graph *graph, vertex *t, vertex *initial) {
+	printf("COUNTBACK CALLED ON T = %d\n", t->value);
 	int path_num = 0;
 	// given a graph with BFS distances filled in
 	int target = initial->value;
@@ -203,6 +204,7 @@ int bfs_countback(Graph *graph, vertex *t, vertex *initial) {
 			path_num += v->sp_count;
 		}
 	}
+
 	return path_num;
 }
 
@@ -219,20 +221,20 @@ int main(int argc, char ** argv) {
 	Graph *graph = newGraph();
 
 // TEST CASE 1: 2 paths ----------------------
-	addVertex(graph, 1);
-	addVertex(graph, 2);
-	addVertex(graph, 3);
-	addVertex(graph, 4);
-	addVertex(graph, 5);
+	// addVertex(graph, 1);
+	// addVertex(graph, 2);
+	// addVertex(graph, 3);
+	// addVertex(graph, 4);
+	// addVertex(graph, 5);
 
-	addEdge(graph, 1, 2, 1);
-	addEdge(graph, 1, 3, 1);
-	addEdge(graph, 2, 4, 1);
-	addEdge(graph, 3, 4, 1);
-	addEdge(graph, 4, 5, 1);
+	// addEdge(graph, 1, 2, 1);
+	// addEdge(graph, 1, 3, 1);
+	// addEdge(graph, 2, 4, 1);
+	// addEdge(graph, 3, 4, 1);
+	// addEdge(graph, 4, 5, 1);
 
-	vertex *v = getVertex(graph, 5);
-	vertex *u = getVertex(graph, 1);
+	// vertex *v = getVertex(graph, 5);
+	// vertex *u = getVertex(graph, 1);
 
 // TEST CASE 2: 8 paths ---------------------
 	// addVertex(graph, 1);
