@@ -59,6 +59,10 @@ typedef struct Graph {
 	GHashTable *adj_list;
 	int *sortedVertices; // alpha sorting for textbook example
 	int vertexCount;
+
+	int *topoSort;
+	int topoCount;
+
 } Graph;
 
 // helper to make a new graph. Returns pointer to the graph
@@ -68,6 +72,10 @@ Graph * newGraph() {
 	newGraph->adj_list = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	newGraph->sortedVertices = malloc(MAXV * sizeof(int));
 	newGraph->vertexCount = 0;
+
+	newGraph->topoSort = malloc(MAXV * sizeof(int));
+	newGraph->topoCount = 0;
+
 	return newGraph;
 }
 
@@ -193,6 +201,8 @@ void dfs_visit(Graph *graph, vertex *deref) {
 		}
 	}
 	deref->vertex_color = black;
+	graph->topoSort[graph->topoCount] = deref->value;
+	graph->topoCount++;
 	printf("finished %d\n", deref->value);
 	dfs_time += 1;
 	deref->t_f = dfs_time;
@@ -255,6 +265,14 @@ void post_dfs_info(Graph *graph) {
 
 }
 
+void topoPrint(Graph *graph) {
+	printf("Topological sort: ");
+	for (int i = graph->topoCount - 1; i >= 0; i--) {
+		printf("%d ", graph->topoSort[i]);
+	}
+	printf("\n");
+}
+
 int main() {
 
 	Graph *graph = newGraph();
@@ -284,6 +302,7 @@ int main() {
 
 	alpha_dfs(graph);
 	post_dfs_info(graph);
+	topoPrint(graph);
 
 	// unit test for sortedInsert()
 	// int len = 5;
