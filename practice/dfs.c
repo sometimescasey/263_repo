@@ -3,7 +3,7 @@
 #include <glib.h> // for the hash table, O(1) avg lookup
 #include <math.h>
 
-// DFS stack
+// DFS stack - we actually haven't used this
 #define push(sp, n) (*((sp)++) = (n)) // push value, increment pointer to next empty space
 #define pop(sp) (*--(sp)) // decrement pointer, return value
 
@@ -37,7 +37,7 @@ struct vertex {
 int sortedInsert(int *array, int arr_len, int v) {
 	// insert v into sorted array
 	// running time O(n) where n == arr_len, so either O(|V|) or O(|E|) depending
-	// on what we run on
+	// on what we run on. therefore still linear
 	if (arr_len == 0) { // empty: just insert
 		array[0] = v;
 	} else {
@@ -85,7 +85,7 @@ vertex * getVertex(Graph *graph, int n) {
 	return v_pointer;
 }
 
-vertex * addVertex(Graph *graph, int value) {
+vertex * addVertex(Graph *graph, int value) { // called exactly |V| times
 	// make a vertex and add it to the Graph
 	vertex *v = g_malloc(sizeof(vertex));
 	v->value = value;
@@ -94,7 +94,7 @@ vertex * addVertex(Graph *graph, int value) {
 
 	g_hash_table_insert(graph->adj_list, GINT_TO_POINTER(v->value), v);
 
-	sortedInsert(graph->sortedVertices, graph->vertexCount, value);
+	sortedInsert(graph->sortedVertices, graph->vertexCount, value); // O(|V|)
 	graph->vertexCount += 1;
 	printf("Inserted %d\n", v->value);
 
@@ -102,7 +102,7 @@ vertex * addVertex(Graph *graph, int value) {
 	return v;
 }
 
-void addNeighbour(Graph *graph, vertex *vertex, int neighbour) {
+void addNeighbour(Graph *graph, vertex *vertex, int neighbour) { // O(2|E|)
 	// check that neighbour isn't already in list
 	for (int i = 0; i < vertex->list_len; i++) {
 		if (vertex->neighbours[i] == neighbour) {
@@ -112,7 +112,9 @@ void addNeighbour(Graph *graph, vertex *vertex, int neighbour) {
 	}
 	
 	// now we do in alpha order!
-	sortedInsert(vertex->neighbours, vertex->list_len, neighbour);
+	sortedInsert(vertex->neighbours, vertex->list_len, neighbour); 
+	// O(|E'|) of any individual vertex
+	
 	// vertex->neighbours[vertex->list_len] = neighbour;
 	vertex->list_len += 1;
 }
@@ -195,6 +197,9 @@ void dfs_visit(Graph *graph, vertex *deref) {
 	// iterate thru all neighbours, which will be in alpha order
 		nbr = deref->neighbours[i];
 		v = getVertex(graph, nbr);
+		if (v->vertex_color == gray) {
+			printf("Found a back edge: %d, %d\n", deref->value, v->value);
+		}
 		if (v->vertex_color == white) {
 			v->pi = deref;
 			dfs_visit(graph, v);
@@ -277,34 +282,62 @@ int main() {
 
 	Graph *graph = newGraph();
 
-	for (int i = 10; i >=1; i--) {
+	// test case 1: clrs page 611 ---------------
+	// for (int i = 10; i >=1; i--) {
+	// 	addVertex(graph, i);	
+	// }
+
+	// addEdge(graph, 1, 4, 0);
+	// addEdge(graph, 4, 9, 0);
+	// addEdge(graph, 2, 9, 0);
+	// addEdge(graph, 5, 9, 0);
+	// addEdge(graph, 2, 5, 0);
+
+	// addEdge(graph, 3, 6, 0);
+	// addEdge(graph, 7, 3, 0);
+	// addEdge(graph, 6, 7, 0);
+	// addEdge(graph, 1, 3, 0);
+	// addEdge(graph, 1, 7, 0);
+
+	// addEdge(graph, 4, 8, 0);
+	// addEdge(graph, 8, 10, 0);
+	// addEdge(graph, 10, 8, 0);
+	// addEdge(graph, 9, 1, 0);
+
+	// ----------------------
+
+	// test case 2: topo sort from slide 20------------
+	// for (int i = 9; i >=1; i--) {
+	// 	addVertex(graph, i);	
+	// }
+
+	// addEdge(graph, 6, 7, 0);
+	// addEdge(graph, 7, 4, 0);
+	// addEdge(graph, 1, 4, 0);
+	// addEdge(graph, 1, 2, 0);
+	// addEdge(graph, 2, 3, 0);
+
+	// addEdge(graph, 6, 8, 0);
+	// addEdge(graph, 9, 8, 0);
+	// addEdge(graph, 4, 3, 0);
+	// addEdge(graph, 7, 8, 0);
+
+	// --------------------
+
+	// test case 3: cycle ----------------------
+
+	for (int i = 5; i >=1; i--) {
 		addVertex(graph, i);	
 	}
 
-	addEdge(graph, 1, 4, 0);
-	addEdge(graph, 4, 9, 0);
-	addEdge(graph, 2, 9, 0);
-	addEdge(graph, 5, 9, 0);
-	addEdge(graph, 2, 5, 0);
+	addEdge(graph, 1, 2, 0);
+	addEdge(graph, 2, 3, 0);
+	addEdge(graph, 3, 5, 0);
+	addEdge(graph, 5, 4, 0);
+	addEdge(graph, 4, 2, 0);
+	//------------------------------------------
 
-	addEdge(graph, 3, 6, 0);
-	addEdge(graph, 7, 3, 0);
-	addEdge(graph, 6, 7, 0);
-	addEdge(graph, 1, 3, 0);
-	addEdge(graph, 1, 7, 0);
-
-	addEdge(graph, 4, 8, 0);
-	addEdge(graph, 8, 10, 0);
-	addEdge(graph, 10, 8, 0);
-	addEdge(graph, 9, 1, 0);
-
-	printAdjList(graph);
-
-	alpha_dfs(graph);
-	post_dfs_info(graph);
-	topoPrint(graph);
-
-	// unit test for sortedInsert()
+	// unit test for sortedInsert() --------------
 	// int len = 5;
 	// int last = 4;
 
@@ -326,7 +359,13 @@ int main() {
 	// 	printf("%d\n", test_array[i]);
 	// }
 
-	// end test -------
+	// end test ------------------------------------
+
+	printAdjList(graph);
+
+	alpha_dfs(graph);
+	post_dfs_info(graph);
+	topoPrint(graph);
 
 	return 0;
 	
