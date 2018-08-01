@@ -3,15 +3,9 @@
 #include <glib.h> // for the hash table, O(1) avg lookup
 #include <math.h>
 
-// DFS stack - we actually haven't used this
-#define push(sp, n) (*((sp)++) = (n)) // push value, increment pointer to next empty space
-#define pop(sp) (*--(sp)) // decrement pointer, return value
-
 #define MAXV 1000 // for malloc() purposes
 #define MAXADJ 10 // for malloc() purposes
 #define POS_INF 2147483647
-
-int dfs_time; // global var; see if you can make scope smaller later
 
 typedef enum vertex_color 
         { 
@@ -41,6 +35,36 @@ struct vertex {
 	int t_d; // discovery time
 	int t_f; // finish time
 };
+
+char getLetter(int n) { // dumb but it works
+	// simple conversion tool for number to letter.
+	char c;
+	switch (n) {
+		case 1:
+			c = 'a';
+			break;
+		case 2:
+			c = 'b';
+			break;
+		case 3:
+			c = 'c';
+			break;
+		case 4:
+			c = 'd';
+			break;
+		case 5:
+			c = 'e';
+			break;
+		case 6:
+			c = 'f';
+			break;
+		case 7:
+			c = 'g';
+			break;
+	}
+
+	return c;
+}
 
 int sortedInsert(int *array, int arr_len, int v) {
 	// insert v into sorted array
@@ -75,26 +99,18 @@ int sortedInsertwEdge(wEdge **array, int arr_len, int v, int weight) {
 		int i = arr_len - 1;
 		array[i+1] = malloc(sizeof(wEdge));
 		
-		printf("pointer at array start: %p\n", array);
-
-		printf("pointer at last item: %p\n", array[i]);
+		// printf("pointer at array start: %p\n", array);
+		// printf("pointer at last item: %p\n", array[i]);
 		
 		// start at last item
 		while (i >= 0 && v < (array[i])->to) {
-			printf("(array[i])->to: %d\n", (array[i])->to);
 			// move everything over 1
-			printf("fine\n");
 			(array[i+1])->to = (array[i])->to;
-			printf("fine\n");
 			(array[i+1])->weight = (array[i])->weight;
-			printf("fine\n");
 			i--;
-			printf("i: %d\n", i);
 		}
 		i++;
-		printf("i: %d\n", i);
 		(array[i])->to = v;
-		printf("fine\n");
 		(array[i])->weight = weight;
 
 	}
@@ -107,9 +123,6 @@ typedef struct Graph {
 	int *sortedVertices; // alpha sorting for textbook example
 	int vertexCount;
 
-	int *topoSort;
-	int topoCount;
-
 } Graph;
 
 // helper to make a new graph. Returns pointer to the graph
@@ -119,9 +132,6 @@ Graph * newGraph() {
 	newGraph->adj_list = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	newGraph->sortedVertices = malloc(MAXV * sizeof(int));
 	newGraph->vertexCount = 0;
-
-	newGraph->topoSort = malloc(MAXV * sizeof(int));
-	newGraph->topoCount = 0;
 
 	return newGraph;
 }
@@ -150,7 +160,6 @@ vertex * addVertex(Graph *graph, int value) { // called exactly |V| times
 }
 
 void addNeighbour(Graph *graph, vertex *vertex, int neighbour, int weight) { // O(2|E|)
-	printf("vertex->list_len: %d\n", vertex->list_len);
 	// check that neighbour isn't already in list
 	for (int i = 0; i < vertex->list_len; i++) {
 		if (vertex->neighbours[i]->to == neighbour) {
@@ -160,7 +169,7 @@ void addNeighbour(Graph *graph, vertex *vertex, int neighbour, int weight) { // 
 	}
 	
 	// now we do in alpha order!
-	printf("Inserting %d into adj list of vertex %d\n", neighbour, vertex->value);
+	// printf("Inserting %d into adj list of vertex %d\n", neighbour, vertex->value);
 	sortedInsertwEdge(vertex->neighbours, vertex->list_len, neighbour, weight); 
 	// O(|E'|) of any individual vertex
 	
@@ -211,120 +220,24 @@ void printListRow(gpointer key, gpointer value, gpointer userdata)
 
 // alpha behaviour
 void printAdjList(Graph * graph) {
+	printf("\n------- ADJ LIST ----------\n");
 	// print this graph's adjacency table.
 	for (int i = 0; i < graph->vertexCount; i++) {
 		int value = graph->sortedVertices[i];
-		printf("key: %d | neighbours: ", value);
+		printf("key: %c | neighbours: ", getLetter(value));
 		vertex *v;
 		v = getVertex(graph, value);
 		for (int j = 0; j < v->list_len; j++) {
-			printf("(%d ", v->neighbours[j]->to);
+			printf("(%c ", getLetter(v->neighbours[j]->to));
 			printf("w=%d) ", v->neighbours[j]->weight);
 		}
 		printf("\n");
 	}
 }
 
-void initialize_dfs(gpointer key, gpointer value, gpointer userdata) {
+void initialize_mst(gpointer key, gpointer value, gpointer userdata) {
 	vertex *deref = ((vertex*) value);
 	deref->vertex_color = white;
-	deref->t_d = 0;
-	deref->t_f = 0;
-	deref->pi = NULL;
-}
-
-void dfs_visit(Graph *graph, vertex *deref) {
-	dfs_time += 1;
-	deref->t_d = dfs_time; // set discovery time
-	deref->vertex_color = gray;
-	int nbr;
-	vertex *v;
-	for (int i = 0; i < deref->list_len; i++) { 
-	// iterate thru all neighbours, which will be in alpha order
-		nbr = deref->neighbours[i]->to;
-		v = getVertex(graph, nbr);
-		if (v->vertex_color == gray) {
-			printf("Found a back edge: %d, %d\n", deref->value, v->value);
-		}
-		if (v->vertex_color == white) {
-			v->pi = deref;
-			dfs_visit(graph, v);
-		}
-	}
-	deref->vertex_color = black;
-	graph->topoSort[graph->topoCount] = deref->value;
-	graph->topoCount++;
-	printf("finished %d\n", deref->value);
-	dfs_time += 1;
-	deref->t_f = dfs_time;
-}
-
-void onEachVertex(gpointer key, gpointer value, gpointer userdata) {
-	Graph *graph = ((Graph*) userdata);
-	vertex *deref = ((vertex*) value);
-	if (deref->vertex_color == white) {
-		dfs_visit(graph, deref);
-	}
-}
-
-void dfs(Graph * graph) {
-	g_hash_table_foreach(graph->adj_list, initialize_dfs, NULL);
-	// set all vertices to white and t_d, t_f values to 0
-	dfs_time = 0;
-	g_hash_table_foreach(graph->adj_list, onEachVertex, graph);
-}
-
-void alpha_dfs(Graph * graph) {
-	// alphabetical dfs
-	g_hash_table_foreach(graph->adj_list, initialize_dfs, NULL);
-	// set all vertices to white and t_d, t_f values to 0
-	dfs_time = 0;
-	vertex *current;
-	for (int i = 0; i < graph->vertexCount; i++) {
-		current = getVertex(graph, graph->sortedVertices[i]);
-		printf("starting on vertex %d\n", current->value);
-		if (current->vertex_color == white) {
-			dfs_visit(graph, current);
-		}
-	}
-}
-
-void post_dfs_info(Graph *graph) {
-	// given a graph with DFS run on it, print info
-	vertex *current;
-	printf("%d\n", graph->vertexCount);
-	for (int i = 0; i < graph->vertexCount; i++) {
-		// printf("graph->sortedVertices[i]: %d\n", graph->sortedVertices[i]);
-		current = getVertex(graph, graph->sortedVertices[i]);
-		
-		int pi;
-		if (current->pi) {
-			pi = current->pi->value;
-		} else {
-			// handle case of starting node which has no parent
-			pi = -POS_INF;
-		}
-
-		printf("Vertex: %d\t| t_d: %d\t| t_f: %d\t| pi: %d\n", 
-			current->value,
-			current->t_d,
-			current->t_f,
-			pi
-			);
-	
-	}
-
-}
-
-void topoPrint(Graph *graph) {
-	// note that this prints backwards
-	// socks must come BEFORE everything else
-	// so they FINISH last
-	printf("Topological sort: ");
-	for (int i = graph->topoCount - 1; i >= 0; i--) {
-		printf("%d ", graph->topoSort[i]);
-	}
-	printf("\n");
 }
 
 void findAllMST(Graph *graph, vertex *start) {
@@ -333,42 +246,85 @@ void findAllMST(Graph *graph, vertex *start) {
 
 }
 
-void MST(Graph *graph, vertex *start) {
-	// starting from a certain vertex, run MST, Prim's
+void MSTvisit(Graph *graph, vertex *deref) {
+	// working Prim's
+	printf("MSTvisit: %c\n", getLetter(deref->value));
+	deref->vertex_color = black;
 
+	int lowest_w = POS_INF;
+	vertex *lowestWeightVertex;
 
+	int nbr;
+	vertex *v;
+
+	int edge_w;
+
+	for (int i = 0; i < deref->list_len; i++) { 
+	// iterate thru all neighbours to look for lowest weight edge; note this is O(|E'|) on each vertex
+		nbr = deref->neighbours[i]->to;
+		v = getVertex(graph, nbr);
+		if (v->vertex_color == black) {
+			// vertex is already in t; look to the next one
+			continue;
+		}
+		if (v->vertex_color == white) {
+			edge_w = deref->neighbours[i]->weight;
+			if (edge_w < lowest_w) {
+				lowest_w = edge_w;
+				lowestWeightVertex = v;
+			}
+		}
 	}
+	if (lowest_w != POS_INF) {
+		MSTvisit(graph, lowestWeightVertex);
+	}		
+}
+
+void MST(Graph *graph, int start) {
+	printf("\n -------- MST ----------\n");
+	g_hash_table_foreach(graph->adj_list, initialize_mst, NULL);
+	// set all vertices to white
+
+	// starting from a certain vertex, run MST, Prim's
+	// traverse the vertex's neighbours for the smallest-weight edge and go down it
+	vertex *startVertex = getVertex(graph, start);
+
+	MSTvisit(graph, startVertex);
+}
 
 int main() {
 
 	Graph *graph = newGraph();
 
-	// test case 1: clrs page 611 ---------------
-	for (int i = 10; i >=1; i--) {
+	// test case 1: just 1 2 ---------------
+	for (int i = 1; i <=7; i++) {
 		addVertex(graph, i);	
 	}
 
-	addEdge(graph, 1, 4, 1, 1);
-	addEdge(graph, 4, 9, 5, 1);
-	addEdge(graph, 2, 9, 1, 1);
-	addEdge(graph, 5, 9, 1, 1);
-	addEdge(graph, 2, 5, 1, 1);
+	addEdge(graph, 1, 2, 5, 1);
+	addEdge(graph, 1, 3, 3, 1);
+	addEdge(graph, 2, 3, 4, 1);
+	addEdge(graph, 2, 4, 6, 1);
+	addEdge(graph, 2, 5, 2, 1);
 
-	addEdge(graph, 3, 6, 1, 1);
-	addEdge(graph, 7, 3, 1, 1);
-	addEdge(graph, 6, 7, 2, 1);
-	addEdge(graph, 1, 3, 1, 1);
-	addEdge(graph, 1, 7, 1, 1);
+	addEdge(graph, 4, 5, 6, 1);
+	addEdge(graph, 4, 6, 6, 1);
+	addEdge(graph, 5, 6, 3, 1);
+	addEdge(graph, 5, 7, 5, 1);
+	addEdge(graph, 6, 7, 4, 1);
 
-	addEdge(graph, 4, 8, 1, 1);
-	addEdge(graph, 8, 10, 1, 1);
-	addEdge(graph, 10, 8, 1, 1);
-	addEdge(graph, 9, 1, 1, 1);
+	// test case 2: A3 Q3 ---------------
+	// for (int i = 1; i <=2; i++) {
+	// 	addVertex(graph, i);	
+	// }
 
-	printAdjList(graph);
+	// addEdge(graph, 1, 2, 1, 1);
 
 	// ----------------------
 
+	printAdjList(graph);
+
+	MST(graph, 1);
 	return 0;
 	
 }
