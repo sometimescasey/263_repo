@@ -31,9 +31,6 @@ struct vertex {
 	
 	vertex_color vertex_color;
 	vertex *pi;
-	
-	int t_d; // discovery time
-	int t_f; // finish time
 };
 
 char getLetter(int n) { // dumb but it works
@@ -240,12 +237,6 @@ void initialize_mst(gpointer key, gpointer value, gpointer userdata) {
 	deref->vertex_color = white;
 }
 
-void findAllMST(Graph *graph, vertex *start) {
-	// starting from a certain start vertex, find all valid MSTs
-
-
-}
-
 void MSTvisit(Graph *graph, vertex *deref) {
 	// working Prim's
 	printf("MSTvisit: %c\n", getLetter(deref->value));
@@ -258,6 +249,10 @@ void MSTvisit(Graph *graph, vertex *deref) {
 	vertex *v;
 
 	int edge_w;
+
+	// TODO:
+	// THIS IS ALL ACTUALLY INCORRECT
+	// YOU NEED TO MAINTAIN a min-heap to constantly return the lowest weight connection
 
 	for (int i = 0; i < deref->list_len; i++) { 
 	// iterate thru all neighbours to look for lowest weight edge; note this is O(|E'|) on each vertex
@@ -276,12 +271,15 @@ void MSTvisit(Graph *graph, vertex *deref) {
 		}
 	}
 	if (lowest_w != POS_INF) {
+		lowestWeightVertex->pi = deref;
 		MSTvisit(graph, lowestWeightVertex);
+	} else {
+		// we're at a dead end: blacken this
 	}		
 }
 
 void MST(Graph *graph, int start) {
-	printf("\n -------- MST ----------\n");
+	printf("\n -------- MST start = %c ----------\n", getLetter(start));
 	g_hash_table_foreach(graph->adj_list, initialize_mst, NULL);
 	// set all vertices to white
 
@@ -290,6 +288,13 @@ void MST(Graph *graph, int start) {
 	vertex *startVertex = getVertex(graph, start);
 
 	MSTvisit(graph, startVertex);
+}
+
+void findAllMST(Graph *graph) {
+	// run MST from all vertices
+	for (int i = 1; i <= 7; i++) {
+		MST(graph, i);
+	}
 }
 
 int main() {
@@ -324,7 +329,7 @@ int main() {
 
 	printAdjList(graph);
 
-	MST(graph, 1);
+	findAllMST(graph);
 	return 0;
 	
 }

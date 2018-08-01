@@ -65,6 +65,8 @@ typedef struct Graph {
 	int *topoSort;
 	int topoCount;
 
+	int **minlabels;
+
 } Graph;
 
 // helper to make a new graph. Returns pointer to the graph
@@ -290,49 +292,63 @@ int min(int x, int y) {
 	else return y;
 }
 
-void initialize_minlabels(gpointer key, gpointer value, gpointer userdata) {
-	vertex *deref = ((vertex*) value);
-	deref->minlabel = deref->value;
-}
-
-void printMinlabels(Graph *graph) {
-	vertex *current;
-	printf("%d\n", graph->vertexCount);
-	for (int i = 0; i < graph->vertexCount; i++) {
-		// printf("graph->sortedVertices[i]: %d\n", graph->sortedVertices[i]);
-		current = getVertex(graph, graph->sortedVertices[i]);
-		printf("Vertex: %d | minlabel: %d\n", current->value, current->minlabel);
+void scc_dfs(Graph *graph_transpose, vertex *u, Graph *original) {
+	u->vertex_color = gray;
+	if (u->pi) {
+		printf("%d is part of scc w parent %d\n", u->value, u->pi->value);
+		// if it has a parent in the transpose graph, it's part of a scc, 
+		// so it should have the same minlabel as its parent
+		original->minlabels[u->value] = original->minlabels[u->pi->value];
+		// if child is smaller than the current pointed-to value, then change the value
+		if (u->value <  *(original->minlabels[u->value])) {
+			*(original->minlabels[u->value]) = u->value;
+		}
+	} else {
+		
+		// doesn't have a parent in transpose, is dead end; initialize minlabel to itself
+		int *current_min = malloc(sizeof(int*));
+		original->minlabels[u->value] = current_min;
+		*current_min = u->value;
 	}
+	
+	int nbr;
+	vertex *v;
+	for (int j = 0; j < u->list_len; j++) {
+		nbr = u->neighbours[j];
+		v = getVertex(graph_transpose, nbr);
+		// if (v->vertex_color == gray) {
+		// 	printf("Found a back edge: %d, %d\n", u->value, v->value);
+		// }
+		if (v->vertex_color == white) {
+			v->pi = u;
+			scc_dfs(graph_transpose, v, original);
+		}
+	}
+	u->vertex_color = black;
 }
 
-void min_reachable(Graph *graph) {
-	// run DFS to populate topo-sort array
-	alpha_dfs(graph);
+void scc(Graph *graph, Graph *graph_transpose) {
+	// given a graph on which DFS has been run which has a topo order, and a graph transpose, 
+	// run DFS in topo order on the transpose in order to
+	// populate the graph's minlabel array of pointers
 
-	g_hash_table_foreach(graph->adj_list, initialize_minlabels, NULL);
-	// populate each vertex with itself as its initial minlabel
+	graph->minlabels = malloc(sizeof(int*) * graph->vertexCount);
 
 	int topoCount = graph->topoCount;
 	int *topoOrder = graph->topoSort;
 
 	vertex *current;
 
-	for (int i = 0; i < topoCount; i++) {
-		current = getVertex(graph, topoOrder[i]);
-		printf("current is: %d\n", current->value);
-		vertex *parent;
-		parent = current->pi;
-
-		if (parent) {
-			parent->minlabel = min(parent->minlabel, current->minlabel);
-			printf("parent is: %d, minlabel set to %d\n", parent->value, parent->minlabel);
-		}	
-	}
-
-	printMinlabels(graph);
+	for (int i = topoCount; i > 0; i--) {
+		// graph_transpose vertices are all white
+		current = getVertex(graph_transpose, topoOrder[i-1]);
+		// printf("current is: %d\n", current->value);
+		scc_dfs(graph_transpose, current, graph);
+}
 }
 
 Graph* transpose(Graph *graph) {
+	printf("----- transposing graph -------\n");
 	// returns the transpose of a graph in O(|V|+|E|) time
 	// a little wasteful bc it constructs the nodes again, but it's still O(V+E)
 	Graph *new = newGraph();
@@ -351,21 +367,87 @@ Graph* transpose(Graph *graph) {
 			addEdge(new, v->neighbours[j], v->value, 0);
 		}
 	}
-
+	printf("----- done transpose -------\n");
 	return new;
+}
+
+void min_reachable(Graph *graph) {
+	printf("---- Running min_reachable -------\n");
+	// run DFS to populate topo-sort array
+	alpha_dfs(graph);
+	printf("---- FINISHED DFS -------\n");
+
+
+	Graph *transp = transpose(graph);
+	scc(graph, transp);
+	// populate each vertex with itself as its initial minlabel, 
+	// but set all connected components to same pointer, pointing to lowest value in CC
+
+	// now copy minlabels from the graph onto the vertices
+	vertex *current;
+	for (int i = 0; i < graph->vertexCount; i++) {
+		current = getVertex(graph, graph->sortedVertices[i]);
+		current->minlabel = *(graph->minlabels[current->value]);
+	}
+
+	int topoCount = graph->topoCount;
+	int *topoOrder = graph->topoSort;
+
+	for (int i = 0; i < topoCount; i++) {
+		current = getVertex(graph, topoOrder[i]);
+		// printf("current is: %d\n", current->value);
+		vertex *parent;
+		parent = current->pi;
+
+		if (parent) {
+			parent->minlabel = min(parent->minlabel, current->minlabel);
+			// printf("parent is: %d, minlabel set to %d\n", parent->value, parent->minlabel);
+		}	
+	}
+}
+
+void printMinLabels(Graph *graph) {
+	vertex *current;
+	for (int i = 0; i < graph->vertexCount; i++) {
+		current = getVertex(graph, graph->sortedVertices[i]);
+		printf("Vertex: %d | minlabel %d \n", current->value, current->minlabel);
+	}
+
 }
 
 int main() {
 
 	Graph *graph = newGraph();
 
-	// test case 1: clrs page 611 ---------------
+	// test case 1: simple ---------------
+	// for (int i = 1; i <= 3; i++) {
+	// 	addVertex(graph, i);	
+	// }
+
+	// addEdge(graph, 1, 2, 0);
+	// addEdge(graph, 2, 3, 0);
+
+	// test case 2: toy --------------
+
 	for (int i = 1; i <= 3; i++) {
-		addVertex(graph, i);	
+		addVertex(graph, i);
 	}
+
+	addVertex(graph, 5);
+
+	addVertex(graph, 7);
+	addVertex(graph, 4);
+	addVertex(graph, 9);
 
 	addEdge(graph, 1, 2, 0);
 	addEdge(graph, 2, 3, 0);
+	addEdge(graph, 3, 1, 0);
+
+	addEdge(graph, 1, 5, 0);
+
+	addEdge(graph, 3, 7, 0);
+	addEdge(graph, 7, 4, 0);
+	addEdge(graph, 7, 9, 0);
 
 
 	// end test ------------------------------------
@@ -377,12 +459,13 @@ int main() {
 	topoPrint(graph);
 
 	// make transpose
-	// Graph *transp = transpose(graph);
-	// printf("------ Made transpose ------ \n");
-	// printAdjList(transp);
+	Graph *transp = transpose(graph);
+	printf("------ Made transpose ------ \n");
+	printAdjList(transp);
 
 
 	min_reachable(graph);
+	printMinLabels(graph);
 
 
 	return 0;
