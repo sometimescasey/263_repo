@@ -111,6 +111,7 @@ vertex * addVertex(Graph *graph, int value) { // called exactly |V| times
 
 	sortedInsert(graph->sortedVertices, graph->vertexCount, value); // O(|V|)
 	graph->vertexCount += 1;
+	printf("Inserted %d\n", v->value);
 
 	// return pointer to vertex
 	return v;
@@ -147,9 +148,9 @@ void addEdge(Graph *graph, int from_vertex, int to_vertex, int undirected) {
 
 		if (undirected != 0) {
 			addNeighbour(graph, to_exists, from_vertex);
-			// printf("%d<->%d\n", from_vertex, to_vertex);
+			printf("%d<->%d\n", from_vertex, to_vertex);
 		} else {
-			// printf("%d-->%d\n", from_vertex, to_vertex);
+			printf("%d-->%d\n", from_vertex, to_vertex);
 		}
 	} else if (!from_exists && !to_exists) {
 		fprintf(stderr, "%d, %d do not exist\n", from_vertex, to_vertex);
@@ -163,12 +164,22 @@ void addEdge(Graph *graph, int from_vertex, int to_vertex, int undirected) {
 	}
 }
 
+void printListRow(gpointer key, gpointer value, gpointer userdata)
+{
+    vertex *deref = ((vertex*) value);
+    printf("key: %d | neighbours: ", GPOINTER_TO_INT(key));
+    for (int i = 0; i < deref->list_len; i++) {
+    	printf("%d ", deref->neighbours[i]);
+    }
+    printf("\n");
+}
+
 // alpha behaviour
 void printAdjList(Graph * graph) {
 	// print this graph's adjacency table.
 	for (int i = 0; i < graph->vertexCount; i++) {
 		int value = graph->sortedVertices[i];
-		printf("vertex: %d | neighbours: ", value);
+		printf("key: %d | neighbours: ", value);
 		vertex *v;
 		v = getVertex(graph, value);
 		for (int j = 0; j < v->list_len; j++) {
@@ -197,7 +208,7 @@ void dfs_visit(Graph *graph, vertex *deref) {
 		nbr = deref->neighbours[i];
 		v = getVertex(graph, nbr);
 		if (v->vertex_color == gray) {
-			// printf("Found a back edge: %d, %d\n", deref->value, v->value);
+			printf("Found a back edge: %d, %d\n", deref->value, v->value);
 		}
 		if (v->vertex_color == white) {
 			v->pi = deref;
@@ -305,10 +316,11 @@ void scc(Graph *graph, Graph *graph_transpose) {
 		current = getVertex(graph_transpose, topoOrder[i-1]);
 		// printf("current is: %d\n", current->value);
 		scc_dfs(graph_transpose, current, graph);
-	}
+}
 }
 
 Graph* transpose(Graph *graph) {
+	printf("------- Making transpose -------\n");
 	// returns the transpose of a graph in O(|V|+|E|) time
 	// a little wasteful bc it constructs the nodes again, but it's still O(V+E)
 	Graph *new = newGraph();
@@ -327,12 +339,17 @@ Graph* transpose(Graph *graph) {
 			addEdge(new, v->neighbours[j], v->value, 0);
 		}
 	}
+	printf("------- Finished transpose -------\n");
 	return new;
 }
 
 void min_reachable(Graph *graph) {
+	printf("\n------- Running min_reachable -------\n");
 	// run DFS to populate topo-sort array
+	printf("---- Running DFS -------\n");
 	alpha_dfs(graph);
+	printf("---- Finished DFS -------\n");
+
 
 	Graph *transp = transpose(graph);
 	scc(graph, transp);
@@ -364,7 +381,7 @@ void printMinLabels(Graph *graph) {
 	vertex *current;
 	for (int i = 0; i < graph->vertexCount; i++) {
 		current = getVertex(graph, graph->sortedVertices[i]);
-		printf("vertex: %d | min(u): %d \n", current->value, current->minlabel);
+		printf("Vertex: %d | minlabel %d \n", current->value, current->minlabel);
 	}
 
 }
@@ -372,6 +389,8 @@ void printMinLabels(Graph *graph) {
 int main() {
 
 	Graph *graph = newGraph();
+
+	printf("------- Constructing graph --------\n");
 
 	// test case 1: simple ---------------
 	// for (int i = 1; i <= 3; i++) {
@@ -409,7 +428,6 @@ int main() {
 	printf("---- Adjacency list: -----\n");
 	printAdjList(graph);
 
-	printf("---- Minimum reachable from each vertex: -----\n");
 	min_reachable(graph);
 	printMinLabels(graph);
 
