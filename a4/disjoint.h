@@ -52,11 +52,6 @@ Item* union_set(Item *a, Item *b) {
 	return hi_rank;
 }
 
-int getJ(Item *item) {
-	Item *rep = findSet(item); // O(log*n) or basically linear
-	return rep->j;
-}
-
 Item* dummyItem() {
 	// make and return a dummy item to address segfaults
 	Item *i = malloc(sizeof(Item));
