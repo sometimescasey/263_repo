@@ -1,192 +1,119 @@
 #include <stdio.h>
-#include "disjoint.h"
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include "disjoint.h"
 
-#define MAXINSERTS 100 // for malloc purposes
-
-#define N_INSERTS 9 // inserts
-#define M_EXTRACTS 6 // extracts
-
-
-void printExtracted(int *extracted) {
-	printf("Printing extracted array:\n");
-	for (int i = 1; i <= M_EXTRACTS; i++) {
+void printExtracted(int *extracted, int m) {
+	for (int i = 1; i <= m; i++) {
 		printf("%d ", extracted[i]);
 	}
 	printf("\n");
 }
 
-
-void OffLineMinimum(Item **items, int *k_rep) {
-	
+void OffLineMinimum(Item **items, int *extracted, int *k_rep, int m) {
 	int j;
-	int *extracted = malloc((M_EXTRACTS+1) * sizeof *extracted);
-
-
+	
 	for (int i = 1; i <= 9; i++) {
-		printf("current testing i = %d, items[i-1]: %d | ", i, items[i-1]->v);
-		Item *rep = findSet(items[i-1]);
+		Item *rep = findSet(items[i]);
 		j = rep->j;
-		printf("rep value: %d | j: %d | \n", rep->v, j);
-		if (j != (M_EXTRACTS+1)) {
-			printf("setting extracted [%d] to i = %d\n", j, i);
+		if (j != (m+1)) {
 			extracted[j] = i;
+
 			// find next k that isn't deleted
 			int l = j+1;
 			while (k_rep[l] == -1) {
 				l += 1;
 			}
-			printf("j is %d | k_rep[j]: %d | l is now %d | k_rep[l]: %d\n", j, k_rep[j], l, k_rep[l]);
-			Item *one;
-			Item *two;
-			one = items[k_rep[j]-1];
-			two = items[k_rep[l]-1];
+
+			Item *kj_rep = items[k_rep[j]];
+			Item *kl_rep = items[k_rep[l]];
 			if (k_rep[l] == 0) {
-				// set is empty, just set the rep for l
+				// K_l is empty, so just set its rep to K_j's rep, and update its j value
 				k_rep[l] = k_rep[j];
-				one->j = l;
+				kj_rep->j = l;
 			} else {
-				Item *temp = union_set(one, two);
+				Item *temp = union_set(kj_rep, kl_rep);
 				temp->j = l;
-				printf("temp: %d\n", temp->v);
 				k_rep[l] = temp->v;
 			}
 			k_rep[j] = -1; // "delete k_j"
 		}
 	}
+}
 
-	printExtracted(extracted);
+int isExtraction(char *s) {
+	if (strcmp(s, "E") == 0 || strcmp(s, "e") == 0) { return 1; }
+	return 0;
 }
 
 void parseString(char str[], Item **items, int *k_rep) {
 
 	int j_index = 1;
 
-	char *list;
-	list = strtok(str, ", ");
+	char *token;
+	token = strtok(str, ", ");
 	char *endptr;
 	int digit;
 
 	Item *current;
-	Item *prev = dummyItem(); // avoid segfault
+	Item *prev = dummyItem(); // prevent seg fault
 
-	while (list != NULL) {
-		printf("%s\n", list);
-		if (strcmp(list, "E") == 0) { // replace with more robust function
+	while (token != NULL) {
+		printf("%s\n", token);
+		if (isExtraction(token)) {
 			j_index += 1;
 		} else {
 
-			digit = strtol(list, &endptr, 10);
-			if (endptr == list) {
-				fprintf(stderr, "Parsing problem: strtol encountered a non-digit\n");
+			digit = strtol(token, &endptr, 10);
+			if (endptr == token) {
+				fprintf(stderr, "Parsing problem: strtol encountered a non-digit token %s\n", token);
 				exit(1);
 			}
 
 			current = makeSet(digit, j_index);
 
-			items[digit-1] = current; // keep pointer for use later
-			printf("stored item with value %d at items[] = %d\n", current->v, digit-1);
-			// subsequent calls must pass null to get the next item
-			printf("fine\n");
+			items[digit] = current; // store pointers for reference later
 
-				printf("prev->j: %d\n", prev->j);
 				if ((prev->j) == j_index) {
-
 					prev = union_set(current, prev);
-					printf("newset | j: %d --------- \n", prev->j);
-					print(prev);
-					printf("newset end --------- \n");
-					printf("item %d is now in set with rep %d\n", current->v, findSet(current)->v);
 				} else {
-					printf("j changed, stored current->v %d into k_rep[%d]\n", current->v, j_index);
 					prev = current;
 				}
-			
-			
-			
-			printf("j_index: %d\n", j_index);
 			k_rep[j_index] = prev->v;
 		}
 		
-		list = strtok(NULL, ", ");
-
+		// subsequent calls to strtok must pass null to get the next item
+		token = strtok(NULL, ", ");
 	}
 }
 
-
 int main() {
 
-	int *k_rep;
-	k_rep = malloc(8 * sizeof *k_rep);
-
 	char str[] = "4, 8, E, 3, E, 9, 2, 6, E, E, E, 1, 7, E, 5";
+	int n = 9;
+	int m = 6;
 
-	Item **items;
-	items = malloc(N_INSERTS * sizeof *items);
-	
-	// char str[] = "4, 8, E, 3, E, 9, 2, 6, E, E, E, 1, 7, E, 5";
-	// int j_index = 1;
+	// +1 to all array sizes for not being zero indexed
+	// we waste one slot on each, but the math is easier to work with
+	Item **items = malloc((n+1) * sizeof *items);
+	int *extracted = malloc((m+1) * sizeof *extracted);
+	int *k_rep = malloc((m+2) * sizeof *k_rep);
+	// additional +1 because we have one more K than there are extractions
 
-	// char *list;
-	// list = strtok(str, ", ");
-	// char *endptr;
-	// int digit;
-
-	// Item *current;
-	// Item *prev = dummyItem(); // avoid segfault
-
-
-
-	// while (list != NULL) {
-	// 	printf("%s\n", list);
-	// 	if (strcmp(list, "E") == 0) { // replace with more robust function
-	// 		j_index += 1;
-	// 	} else {
-
-	// 		digit = strtol(list, &endptr, 10);
-	// 		if (endptr == list) {
-	// 			fprintf(stderr, "Parsing problem: strtol encountered a non-digit\n");
-	// 			exit(1);
-	// 		}
-
-	// 		current = makeSet(digit, j_index);
-
-	// 		items[digit-1] = current; // keep pointer for use later
-	// 		printf("stored item with value %d at items[] = %d\n", current->v, digit-1);
-	// 		// subsequent calls must pass null to get the next item
-	// 		printf("fine\n");
-
-	// 			printf("prev->j: %d\n", prev->j);
-	// 			if ((prev->j) == j_index) {
-
-	// 				prev = union_set(current, prev);
-	// 				printf("newset | j: %d --------- \n", prev->j);
-	// 				print(prev);
-	// 				printf("newset end --------- \n");
-	// 				printf("item %d is now in set with rep %d\n", current->v, findSet(current)->v);
-	// 			} else {
-	// 				printf("j changed, stored current->v %d into k_rep[%d]\n", current->v, j_index);
-	// 				prev = current;
-	// 			}
-			
-			
-			
-	// 		printf("j_index: %d\n", j_index);
-	// 		k_rep[j_index] = prev->v;
-	// 	}
-		
-	// 	list = strtok(NULL, ", ");
-
-	// }
-
+	printf("Parsing sequence: \n");
 	parseString(str, items, k_rep);
+	
+	OffLineMinimum(items, extracted, k_rep, m);
 
-	OffLineMinimum(items, k_rep);
+	printf("Printing extracted array:\n");
+	printExtracted(extracted, m);
 
+	// cleanup
 	free(items);
-
+	free(extracted);
+	free(k_rep);
+	
 	return 0;
 }
 

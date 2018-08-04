@@ -8,13 +8,13 @@ struct Item {
 	Item *b; // backward pointer, circular ll for printing
 	int v;   // value
 	int j;   // j-index, for the purposes of the question. 
-	         // Note this may never be updated on lower nodes so we must always check up to the representative
+	         // Note this may never be updated on lower nodes 
+			 // so we must always check on the representative via findSet()
 	int rank;
 };
 
 Item* findSet(Item *item) {
-	// given item, find its representative
-	// path compression
+	// given item, find its representative. Use path compression
 	if (item->f != item) {
 		item->f = findSet(item->f);
 	}
@@ -24,7 +24,6 @@ Item* findSet(Item *item) {
 Item* union_set(Item *a, Item *b) {
 	Item *a_rep = findSet(a); // basically linear
 	Item *b_rep = findSet(b); // basically linear
-	printf("(findSet: a_rep: %d, b_rep %d\n", a_rep->v, b_rep->v);
 	Item *hi_rank;
 	Item *lo_rank;	
 	
@@ -59,14 +58,13 @@ int getJ(Item *item) {
 }
 
 Item* dummyItem() {
-	// make and return a dummy item
+	// make and return a dummy item to address segfaults
 	Item *i = malloc(sizeof(Item));
 	i->v = -1;
 	i->f = i;
 	i->b = i;
 	i->rank = -1;
 	i->j = -1;
-
 	return i;
 }
 
@@ -97,7 +95,7 @@ void print(Item *i) { // just traverse the backward edges until we get to the st
 // 	Item *c = makeSet(3);
 
 // 	a = union_set(a,b);
-// 	a= union_set(a,c);
+// 	a = union_set(a,c);
 
 // 	print(a);
 
