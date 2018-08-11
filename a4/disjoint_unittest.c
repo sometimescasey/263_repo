@@ -13,15 +13,22 @@ struct Item {
 };
 
 Item* findSet(Item *item) {
+	printf("Finding %d | ", item->v);
 	// given item, find its representative
 	// path compression
-	while (item->f != item) {
+	int one = item->f->v;
+	int two = item->v;
+	printf("One: %d | two: %d  |", one, two);
+
+	if (one != two) {
 		item->f = findSet(item->f);
 	}
+	printf("findSet returning %d\n", (item->f)->v);
 	return item->f;
 }
 
 Item* union_set(Item *a, Item *b) {
+	printf("Running union_set. a->v: %d, a->rank: %d, b->v: %d, b->rank: %d\n", a->v, a->rank, b->v, b->rank);
 	Item *a_rep = findSet(a); // basically linear
 	Item *b_rep = findSet(b); // basically linear
 	Item *hi_rank;
@@ -49,6 +56,7 @@ Item* union_set(Item *a, Item *b) {
 		lo_rank->b = temp;
 	}
 
+	printf("returning hi_rank: %d\n", hi_rank->v);
 	return hi_rank;
 }
 
@@ -57,12 +65,13 @@ int getJ(Item *item) {
 	return rep->j;
 }
 
-Item* makeSet(int n) {
+Item* makeSet(int n, int j) {
 	Item *i = malloc(sizeof(Item));
 	i->v = n;
 	i->f = i;
 	i->b = i;
 	i->rank = 0;
+	i->j = j;
 
 	return i;
 }
@@ -76,16 +85,20 @@ void print(Item *i) { // just traverse the backward edges until we get to the st
 	printf("%d\n", current->v); // one more print to get the last value
 }
 
-// int main() {
+int main() {
 
-// 	Item *a = makeSet(1);
-// 	Item *b = makeSet(2);
-// 	Item *c = makeSet(3);
+	Item *a = makeSet(1, 0);
+	Item *b = makeSet(2, 0);
+	Item *c = makeSet(3, 0);
 
-// 	a = union_set(a,b);
-// 	a= union_set(a,c);
+	a = union_set(a,b);
+	a = union_set(a,c);
 
-// 	print(a);
+	Item *find = findSet(c);
+	// printf("find->v: %d | a->v %d\n", find->v, a->v);
 
-// 	return 0;
-// }
+
+	print(c);
+
+	return 0;
+}
