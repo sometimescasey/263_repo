@@ -1,6 +1,8 @@
 #ifndef _GRAPH_UTIL_H_
 #define _GRAPH_UTIL_H_
 
+typedef struct Item Item;
+
 typedef enum vertex_color 
         { 
           white, 
@@ -26,6 +28,7 @@ struct vertex {
 	
 	vertex_color vertex_color;
 	vertex *pi;
+	Item *item; // pointer to disjoint set item
 };
 
 typedef struct Graph Graph;

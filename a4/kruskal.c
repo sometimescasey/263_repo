@@ -15,7 +15,8 @@ int main() {
 	vertex **vertex_array = malloc(v_count * sizeof(vertex*));
 
 	for (int i = 0; i < v_count; i++) {
-		vertex_array[i] = addVertex(graph, i+1);	
+		vertex_array[i] = addVertex(graph, i+1);
+		vertex_array[i]->item = makeSet(i+1, 0); // last param is j, we can ignore	
 	}
 
 	int edgeCount = 17; // sad hardcode for now, think of better way to do tmr
@@ -49,26 +50,26 @@ int main() {
 	addEdge(graph, 6, 9, 9, 1);
 	addEdge(graph, 8, 9, 6, 1);
 
-	// iterate thru edge array
-	for (int i=0; i < edgeCount; i++) {
-		printf("Edge (%d->%d, w: %d)\n", 
-			graph->edgeArray[i]->to, 
-			graph->edgeArray[i]->from, 
-			graph->edgeArray[i]->weight);
-	}
-
 	// sort it
 	printf("SORTING\n");
 	sortEdgeArray(graph->edgeArray, edgeCount);
 
 	// iterate again
 	for (int i=0; i < edgeCount; i++) {
-		printf("Edge (%d->%d, w: %d)\n", 
-			graph->edgeArray[i]->to, 
-			graph->edgeArray[i]->from, 
+		vertex *v1 = getVertex(graph, graph->edgeArray[i]->from);
+		vertex *v2 = getVertex(graph, graph->edgeArray[i]->to);
+		Item *item1 = findSet(v1->item);
+		Item *item2 = findSet(v2->item);
+
+		if (item1->v !=  item2->v) {
+			// join em and include in MST
+			union_set(item1, item2);
+			printf("Edge (%c->%c, w: %d)\n", 
+			getLetter(graph->edgeArray[i]->to), 
+			getLetter(graph->edgeArray[i]->from), 
 			graph->edgeArray[i]->weight);
+
+		}
 	}
-
-
 
 }

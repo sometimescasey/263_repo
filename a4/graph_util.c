@@ -268,7 +268,7 @@ int compareWeights(const void *p, const void *q)
 	return ((*e1)->weight - (*e2)->weight);
 }
 
-void sortEdgeArray(wEdge **edgeArray, int edgeCount) {
+void sortEdgeArray(wEdge **edgeArray, int edgeCount) { // uses qsort: quicksort, nlogn
 	// take graph's edgeArray and return a sorted copy
 	wEdge ** sorted = malloc(sizeof(wEdge*) * edgeCount);
 	for (int i = 0; i < edgeCount; i++) {
