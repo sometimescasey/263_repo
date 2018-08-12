@@ -11,31 +11,43 @@
 
 int dfs_time; // global var; see if you can make scope smaller later
 
-typedef enum vertex_color 
-        { 
-          white, 
-          gray,
-          black 
-        } vertex_color; 
+// typedef enum vertex_color 
+//         { 
+//           white, 
+//           gray,
+//           black 
+//         } vertex_color; 
 
-typedef struct wEdge wEdge;
-// weighted directed edge
+// typedef struct wEdge wEdge;
+// // weighted directed edge
 
-struct wEdge {
-	int to;
-	int weight;
-};
+// struct wEdge {
+// 	int to;
+// 	int from;
+// 	int weight;
+// };
 
-typedef struct vertex vertex;
+// typedef struct vertex vertex;
 
-struct vertex {
-	int value;
-	wEdge **neighbours; // array of pointers to wEdge
-	int list_len;
+// struct vertex {
+// 	int value;
+// 	wEdge **neighbours; // array of pointers to wEdge
+// 	int list_len;
 	
-	vertex_color vertex_color;
-	vertex *pi;
-};
+// 	vertex_color vertex_color;
+// 	vertex *pi;
+// };
+
+// typedef struct Graph Graph;
+
+// struct Graph {
+// 	GHashTable *adj_list;
+// 	int *sortedVertices; // alpha sorting for textbook example
+// 	int vertexCount;
+// 	wEdge **edgeArray;
+// 	int edgeIndex;
+
+// };
 
 int sortedInsert(int *array, int arr_len, int v) {
 	// insert v into sorted array
@@ -58,13 +70,14 @@ int sortedInsert(int *array, int arr_len, int v) {
 	return arr_len + 1;
 }
 
-int sortedInsertwEdge(wEdge **array, int arr_len, int v, int weight) {
+int sortedInsertwEdge(wEdge **array, int arr_len, int from, int v, int weight, Graph *graph) {
 	// insert v into sorted array
 	// running time O(n) where n == arr_len, so either O(|V|) or O(|E|) depending
 	// on what we run on. therefore still linear
 	if (arr_len == 0) { // empty: just insert
 		array[0] = malloc(sizeof(wEdge));
 		array[0]->to = v;
+		array[0]->from = from;
 		array[0]->weight = weight;
 	} else {
 		int i = arr_len - 1;
@@ -85,16 +98,10 @@ int sortedInsertwEdge(wEdge **array, int arr_len, int v, int weight) {
 		(array[i])->weight = weight;
 
 	}
+
 	// return updated arr_len
 	return arr_len + 1;
 }
-
-typedef struct Graph {
-	GHashTable *adj_list;
-	int *sortedVertices; // alpha sorting for textbook example
-	int vertexCount;
-
-} Graph;
 
 // helper to make a new graph. Returns pointer to the graph
 Graph * newGraph() {
@@ -103,6 +110,7 @@ Graph * newGraph() {
 	newGraph->adj_list = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	newGraph->sortedVertices = malloc(MAXV * sizeof(int));
 	newGraph->vertexCount = 0;
+	newGraph->edgeIndex = 0;
 
 	return newGraph;
 }
@@ -141,7 +149,7 @@ void addNeighbour(Graph *graph, vertex *vertex, int neighbour, int weight) { // 
 	
 	// now we do in alpha order!
 	// printf("Inserting %d into adj list of vertex %d\n", neighbour, vertex->value);
-	sortedInsertwEdge(vertex->neighbours, vertex->list_len, neighbour, weight); 
+	sortedInsertwEdge(vertex->neighbours, vertex->list_len, vertex->value, neighbour, weight, graph); 
 	// O(|E'|) of any individual vertex
 	
 	// vertex->neighbours[vertex->list_len] = neighbour;
@@ -159,6 +167,15 @@ void addEdge(Graph *graph, int from_vertex, int to_vertex, int weight, int undir
 	if (from_exists && to_exists) {
 		// search for from_vertex
 		addNeighbour(graph, from_exists, to_vertex, weight);
+
+		// also update Graph's edge array
+		int index = graph->edgeIndex;
+		graph->edgeArray[index] = malloc(sizeof(wEdge));
+
+		(graph->edgeArray[index])->to = to_vertex;
+		graph->edgeArray[index]->from = from_vertex;
+		graph->edgeArray[index]->weight = weight;
+		graph->edgeIndex++;
 
 		if (undirected != 0) {
 			addNeighbour(graph, to_exists, from_vertex, weight);
@@ -241,3 +258,25 @@ char getLetter(int n) { // dumb but it works
 
 	return c;
 }
+
+int compareWeights(const void *p, const void *q)
+{
+
+	const wEdge **e1 = (const wEdge **) p;
+	const wEdge **e2 = (const wEdge **) q;
+
+	return ((*e1)->weight - (*e2)->weight);
+}
+
+void sortEdgeArray(wEdge **edgeArray, int edgeCount) {
+	// take graph's edgeArray and return a sorted copy
+	wEdge ** sorted = malloc(sizeof(wEdge*) * edgeCount);
+	for (int i = 0; i < edgeCount; i++) {
+		sorted[i] = malloc(sizeof(wEdge));
+	}
+
+	qsort(edgeArray, edgeCount, sizeof(wEdge*), &compareWeights);
+}
+
+
+

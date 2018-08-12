@@ -18,6 +18,10 @@ int main() {
 		vertex_array[i] = addVertex(graph, i+1);	
 	}
 
+	int edgeCount = 17; // sad hardcode for now, think of better way to do tmr
+	graph->edgeArray = malloc(sizeof(wEdge*) * edgeCount);
+
+
 	// box 1
 	addEdge(graph, 1, 2, 4, 1);
 	addEdge(graph, 1, 3, 14, 1);
@@ -44,6 +48,27 @@ int main() {
 	addEdge(graph, 4, 9, 0, 1);
 	addEdge(graph, 6, 9, 9, 1);
 	addEdge(graph, 8, 9, 6, 1);
+
+	// iterate thru edge array
+	for (int i=0; i < edgeCount; i++) {
+		printf("Edge (%d->%d, w: %d)\n", 
+			graph->edgeArray[i]->to, 
+			graph->edgeArray[i]->from, 
+			graph->edgeArray[i]->weight);
+	}
+
+	// sort it
+	printf("SORTING\n");
+	sortEdgeArray(graph->edgeArray, edgeCount);
+
+	// iterate again
+	for (int i=0; i < edgeCount; i++) {
+		printf("Edge (%d->%d, w: %d)\n", 
+			graph->edgeArray[i]->to, 
+			graph->edgeArray[i]->from, 
+			graph->edgeArray[i]->weight);
+	}
+
 
 
 }
