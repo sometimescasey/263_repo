@@ -1,4 +1,4 @@
-all : bfs_count_paths
+all : bfs_count_paths bfs_paths
 
 bfs : bfs.c
 	gcc --std=gnu99 -Wall -o bfs bfs.c `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0`

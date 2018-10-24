@@ -1,22 +1,10 @@
-/* 
-Summer 2018
-CSC263 Assignment 3 Question 7
-
-We consider undirected graphs (with no weights). 
-Often there are multiple shortest paths between two nodes of a graph.
-
-Describe a linear-time algorithm such that, given an undirected, unweighted graph 
-and two vertices u and v, the algorithm counts the number of distinct shortest paths 
-from u to v. Justify its correctness and the running time.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <glib.h> // for the hash table, O(1) avg lookup
+#include <sys/queue.h> // for the BFS queue
 #include <math.h>
-#include <glib.h> // hash table
-#include <sys/queue.h> // queue
 
-#define MAXADJ 10 // max neighbours, for malloc() purposes
+#define MAXADJ 10
 #define POS_INF 2147483647
 
 TAILQ_HEAD(, vertex) head; // make queue for BFS
@@ -38,7 +26,6 @@ struct vertex {
 	vertex_color vertex_color;
 	int d;
 	vertex *pi;
-	int sp_count; // count of shortest paths
 	TAILQ_ENTRY(vertex) entries;
 };
 
@@ -57,9 +44,6 @@ Graph * newGraph() {
 vertex * getVertex(Graph *graph, int n) {
 	// given int n, gets the pointer to the vertex with that value
 	vertex *v_pointer = g_hash_table_lookup(graph->adj_list, GINT_TO_POINTER(n));
-	if (!v_pointer) {
-		fprintf(stderr, "getVertex(%d) failed: node does not exist\n", n);
-	}
 	return v_pointer;
 }
 
@@ -71,6 +55,7 @@ vertex * addVertex(Graph *graph, int value) {
 	v->list_len = 0;
 
 	g_hash_table_insert(graph->adj_list, GINT_TO_POINTER(v->value), v);
+	printf("Inserted %d\n", v->value);
 
 	// return pointer to vertex
 	return v;
@@ -88,7 +73,7 @@ void addNeighbour(Graph *graph, vertex *vertex, int neighbour) {
 	vertex->list_len += 1;
 }
 
-void addEdge(Graph *graph, int from_vertex, int to_vertex, int directed) {
+void addEdge(Graph *graph, int from_vertex, int to_vertex, int undirected) {
 	// Add edge. If directed != 0, adds an edge back in the other direction too.
 	// Amends the neighbours array of the relevant vertex/vertices.
 
@@ -100,7 +85,7 @@ void addEdge(Graph *graph, int from_vertex, int to_vertex, int directed) {
 		// search for from_vertex
 		addNeighbour(graph, from_exists, to_vertex);
 
-		if (directed != 0) {
+		if (undirected != 0) {
 			addNeighbour(graph, to_exists, from_vertex);
 			printf("%d<->%d\n", from_vertex, to_vertex);
 		} else {
@@ -128,29 +113,36 @@ void printListRow(gpointer key, gpointer value, gpointer userdata)
     printf("\n");
 }
 
-void printAdjList(Graph * graph) {
-	// print this graph's adjacency table.
-	g_hash_table_foreach(graph->adj_list, printListRow, NULL);
-}
-
 void initialize_bfs(gpointer key, gpointer value, gpointer userdata) {
 	vertex *deref = ((vertex*) value);
 	deref->vertex_color = white;
 	deref->d = POS_INF;
 	deref->pi = NULL;
-	deref->sp_count = -POS_INF;
 }
 
-void enqueue(Graph *graph, vertex* v) {
+void printAdjList(Graph * graph) {
+	// print this graph's adjacency table.
+	g_hash_table_foreach(graph->adj_list, printListRow, NULL);
+}
+void enqueue_v(Graph *graph, vertex* v) {
+	printf("queued vertex %d\n", v->value);
 	TAILQ_INSERT_TAIL(&head, v, entries);
-	// printf("queued vertex %d\n", v->value);
+}
+
+// TODO: check if this is ever used
+void enqueue(Graph *graph, int n) {
+	// enqueue the node with value n
+	vertex *item;
+	item = g_hash_table_lookup(graph->adj_list, GINT_TO_POINTER(n));
+	printf("queued %d\n", item->value);
+	TAILQ_INSERT_TAIL(&head, item, entries);
 }
 
 vertex* dequeue(Graph *graph) {
 	vertex *returned_item;
 	returned_item = TAILQ_FIRST(&head);
+	printf("dequeued %d\n", returned_item->value);
 	TAILQ_REMOVE(&head, returned_item, entries);
-	// printf("dequeued %d\n", returned_item->value);
 	return returned_item;
 }
 
@@ -162,7 +154,7 @@ int bfs(Graph *graph, int start) {
 	s->d = 0;
 	s->pi = NULL;
 
-	enqueue(graph, s);
+	enqueue_v(graph, s);
 	vertex *u;
 	while (!TAILQ_EMPTY(&head)) {
 		u = dequeue(graph);
@@ -175,52 +167,30 @@ int bfs(Graph *graph, int start) {
 				v->vertex_color = gray;
 				v->d = u->d + 1;
 				v->pi = u;
-				enqueue(graph, v);
+				enqueue_v(graph, v);
 			}
 		}
 		u->vertex_color = black;
 	}
+
 	return 0;
 }
 
-int bfs_countback(Graph *graph, vertex *t, vertex *initial) {
-	printf("COUNTBACK CALLED ON T = %d\n", t->value);
-	int path_num = 0;
-	// given a graph with BFS distances filled in
-	int target = initial->value;
-	int distance = t->d;
-
-	for (int i = 0; i < t->list_len; i++) {
-		int nbr = t->neighbours[i];
-		vertex *v = getVertex(graph, nbr); 
-		if (v->value == target) {
-			return 1; // one of the neighbours is the target value; it's one edge away
-		}
-		if (v->d == (distance - 1)) {
-			// ensure we don't waste time calling bfs_countback() on any node twice
-			if (v->sp_count == -POS_INF) {
-				v->sp_count = bfs_countback(graph, v, initial);	
-			}
-			path_num += v->sp_count;
-		}
-	}
-
-	return path_num;
+void printVertexDistance(gpointer key, gpointer value, gpointer userdata)
+{
+    vertex *deref = ((vertex*) value);
+    printf("key: %d | distance: %d\n", GPOINTER_TO_INT(key), deref->d);
 }
 
-void path_count(Graph *graph, vertex *u, vertex *v) {
-	int bfs_result = bfs(graph, u->value);
-	if (bfs_result == 0) {
-		int count = bfs_countback(graph, v, u);
-		printf("# shortest paths from %d to %d: %d\n", u->value, v->value, count);
-	}
+void printDistances(Graph *graph) {
+	g_hash_table_foreach(graph->adj_list, printVertexDistance, NULL);
 }
 
-int main(int argc, char ** argv) {
 
+
+int main() {
 	Graph *graph = newGraph();
 
-// TEST CASE 1: 2 paths ----------------------
 	// addVertex(graph, 1);
 	// addVertex(graph, 2);
 	// addVertex(graph, 3);
@@ -233,68 +203,52 @@ int main(int argc, char ** argv) {
 	// addEdge(graph, 3, 4, 1);
 	// addEdge(graph, 4, 5, 1);
 
-	// vertex *v = getVertex(graph, 5);
-	// vertex *u = getVertex(graph, 1);
+	// aug 2017 practice final Q 7a BFS //
 
-// TEST CASE 2: 8 paths ---------------------
-	// addVertex(graph, 1);
-	// addVertex(graph, 2);
-	// addVertex(graph, 3);
-	// addVertex(graph, 4);
-	// addVertex(graph, 5);
-	// addVertex(graph, 6);
-	// addVertex(graph, 7);
-	// addVertex(graph, 8);
+	for (int i = 1; i < 10; i++) {
+		addVertex(graph, i);
+	}
 
-	// addEdge(graph, 1, 2, 1);
-	// addEdge(graph, 1, 3, 1);
+	addEdge(graph, 2, 1, 0);
+	addEdge(graph, 1, 3, 0);
+	addEdge(graph, 3, 2, 0);
+	addEdge(graph, 3, 4, 0);
+	addEdge(graph, 3, 5, 0);
 
-	// addEdge(graph, 2, 4, 1);
-	// addEdge(graph, 2, 5, 1);
+	addEdge(graph, 2, 9, 0);
+	addEdge(graph, 4, 6, 0);
+	addEdge(graph, 5, 4, 0);
+	addEdge(graph, 5, 6, 0);
+	addEdge(graph, 6, 9, 0);
 
-	// addEdge(graph, 3, 4, 1);
-	// addEdge(graph, 3, 5, 1);
+	addEdge(graph, 7, 5, 0);
 
-	// addEdge(graph, 4, 6, 1);
-	// addEdge(graph, 4, 7, 1);
+	addEdge(graph, 9, 7, 0);
+	addEdge(graph, 9, 8, 0);
 
-	// addEdge(graph, 5, 6, 1);
-	// addEdge(graph, 5, 7, 1);
+	addEdge(graph, 8, 7, 0);
+	
 
-	// addEdge(graph, 6, 8, 1);
-	// addEdge(graph, 7, 8, 1);
-
-	// vertex *v = getVertex(graph, 8);
-	// vertex *u = getVertex(graph, 1);
-
-// ------------------------------------------
-
-// TEST CASE 3: 4 paths ---------------------
-
-	// addVertex(graph, 1);
-	// addVertex(graph, 2);
-	// addVertex(graph, 3);
-	// addVertex(graph, 4);
-	// addVertex(graph, 5);
-	// addVertex(graph, 6);
-
-	// addEdge(graph, 1, 2, 1);
-	// addEdge(graph, 1, 3, 1);
-	// addEdge(graph, 1, 4, 1);
-	// addEdge(graph, 1, 5, 1);
-
-	// addEdge(graph, 2, 6, 1);
-	// addEdge(graph, 3, 6, 1);
-	// addEdge(graph, 4, 6, 1);
-	// addEdge(graph, 5, 6, 1);
-
-	// vertex *v = getVertex(graph, 6);
-	// vertex *u = getVertex(graph, 1);
-
-// ------------------------------------------
+	printAdjList(graph);
 
 	TAILQ_INIT(&head);
-	path_count(graph, u, v);
+
+	// enqueue(graph, 1);
+	// enqueue(graph, 2);
+	// enqueue(graph, 3);
+
+	// vertex *current = dequeue(graph);
+
+	// printf("dequeued item: %d, neighbours are: ", current->value);
+	// for (int i = 0; i < current->list_len; i++) {
+	// 	printf("%d, ", current->neighbours[i]);
+	// }
+	// printf("\n");
+
+	int bfs_result = bfs(graph, 1);
+	printf("bfs_result: %d\n", bfs_result);
+
+	printDistances(graph);
 
 	return 0;
 }

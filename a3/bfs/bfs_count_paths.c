@@ -8,6 +8,11 @@ Often there are multiple shortest paths between two nodes of a graph.
 Describe a linear-time algorithm such that, given an undirected, unweighted graph 
 and two vertices u and v, the algorithm counts the number of distinct shortest paths 
 from u to v. Justify its correctness and the running time.
+
+Note: compile requires glib flags:
+gcc -Wall -o bfs_count_paths bfs_count_paths.c `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0`
+
+
 */
 
 #include <stdio.h>
@@ -176,10 +181,10 @@ int bfs(Graph *graph, int start) {
 	enqueue(graph, s);
 	vertex *u;
 	while (!TAILQ_EMPTY(&head)) {
-		u = dequeue(graph);
+		u = dequeue(graph); // occurs |V| times
 		int nbr;
 		vertex *v;
-		for (int i = 0; i < u->list_len; i++) {
+		for (int i = 0; i < u->list_len; i++) { // sum of all these is 2|E|
 			nbr = u->neighbours[i];
 			v = getVertex(graph, nbr);
 			if (v->vertex_color == white) {
@@ -196,11 +201,12 @@ int bfs(Graph *graph, int start) {
 
 int bfs_countback(Graph *graph, vertex *t, vertex *initial) {
 	int path_num = 0;
-	// given a graph with BFS distances filled in
+	// given a graph that already has BFS distances filled in, 
+	// from starting point 'initial'
 	int target = initial->value;
 	int distance = t->d;
 
-	for (int i = 0; i < t->list_len; i++) {
+	for (int i = 0; i < t->list_len; i++) { // Upper bounded by 2|E|
 		int nbr = t->neighbours[i];
 		vertex *v = getVertex(graph, nbr); 
 		if (v->value == target) {
@@ -209,7 +215,7 @@ int bfs_countback(Graph *graph, vertex *t, vertex *initial) {
 		if (v->d == (distance - 1)) {
 			// ensure we don't waste time calling bfs_countback() on any node twice
 			if (v->sp_count == -POS_INF) {
-				v->sp_count = bfs_countback(graph, v, initial);	
+				v->sp_count = bfs_countback(graph, v, initial);	// called max |V| times
 			}
 			path_num += v->sp_count;
 		}

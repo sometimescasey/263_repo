@@ -22,8 +22,6 @@ kbit_tuple new_kbit_tuple(int k) {
 int increment(kbit_tuple *kbit_tuple) {
 	// takes a pointer to kbit_tuple, increments it, and returns the decimal value
 	int i = 0;
-	// TODO: print to prove amort cost
-	// printf("kbit_tuple->k: %d\n", kbit_tuple->k);
 	
 		while(kbit_tuple->kbit_array[i] == 1) {
 			kbit_tuple->kbit_array[i] = 0;
@@ -69,29 +67,21 @@ int* kbit_rev_permute(int *array, int n) {
 
 int main(int argc, char **argv) {
 
-	// int upto;
-	
-	// if (argc == 2) {
-	// 	upto = strtol(argv[1], NULL, 10);
-	// } else {
-	// 	printf("Usage: bitrev_counter number\n");
-	// }
+	// TEST CASE 1 ------------
 
-	// kbit_tuple kbit_tuple = new_kbit_tuple(2);
+	// int n = 4;
+	// int test[] = {0, 1, 2, 3};
 
-	// int i = 0;
-	// int j;
-	
-	// printf("%d\n", kbit_tuple.dec);
+	// TEST CASE 2 -----------
 
-	// while (i < upto) {
-	// 	j = increment(&kbit_tuple);
-	// 	printf("%d\n", j);
-	// 	i++;
-	// }
+	int n = 10;
+	int *test = malloc(sizeof(int) * n);
 
-	int n = 4;
-	int test[] = {0, 1, 2, 3};
+	for (int i = 0; i<n; i++) {
+		test[i] = i;
+	}
+
+	// ------------------------
 
 	int *pointer;
 	pointer = kbit_rev_permute(test, n);
@@ -99,6 +89,9 @@ int main(int argc, char **argv) {
 		printf(" %d ", pointer[i]);
 	}
 	printf("\n");
+	
+	// cleanup
+	free(test);
 	free(pointer);
 
 	return 0;
